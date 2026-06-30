@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ideas Shop - Home</title>
+    <style>
+        /* বেসিক পেজ সেটআপ */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f3;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* মূল কন্টেইনার ডিজাইন */
+        .container {
+            text-align: center;
+            background: #ffffff;
+            padding: 50px 60px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* শপের নাম এবং টেক্সট ডিজাইন */
+        .container h1 {
+            margin: 0;
+            font-size: 36px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .container p {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+
+        /* বাটন গ্রুপ এবং ডিজাইন */
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            text-decoration: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Order Management বাটনের কালার */
+        .btn-order {
+            background-color: #27ae60; 
+        }
+        .btn-order:hover {
+            background-color: #219150;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(39, 174, 96, 0.3);
+        }
+
+        /* Product Code Maker বাটনের কালার */
+        .btn-code {
+            background-color: #2980b9; 
+        }
+        .btn-code:hover {
+            background-color: #1f6391;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(41, 128, 185, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Ideas Shop</h1>
+        <p>আপনার প্রয়োজনীয় ড্যাশবোর্ড নির্বাচন করুন</p>
+        
+        <div class="button-group">
+            <!-- Order Management Button -->
+            <a href="order management.html" class="btn btn-order">Order Management</a>
+            
+            <!-- Product Code Maker Button -->
+            <a href="iscode.html" class="btn btn-code">Product Code Maker</a>
+        </div>
+    </div>
+
+</body>
+</html>
