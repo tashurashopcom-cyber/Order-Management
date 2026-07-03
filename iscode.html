@@ -713,17 +713,8 @@
 
             <div class="form-group" id="specsFieldGroup">
                 <label><i class="fas fa-list-ul"></i> স্পেসিফিকেশন</label>
-                <div class="specs-group" id="specsContainer" oninput="updatePreview()">
-                    <div class="spec-item">
-                        <input type="text" class="spec-input" placeholder="যেমন: ✔ জিএসএম: ২১০+ হেভি কোয়ালিটি">
-                        <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
-                    </div>
-                    <div class="spec-item">
-                        <input type="text" class="spec-input" placeholder="যেমন: ✔ সাইজ: M, L, XL">
-                        <button type="button" class="btn btn-danger" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-add-spec" onclick="addSpecField()"><i class="fas fa-plus"></i> নতুন স্পেসিফিকেশন যোগ করুন</button>
+                <textarea id="specsTextarea" rows="6" placeholder="পুরো স্পেসিফিকেশন এখানে পেস্ট করুন — কমা ( , ) যেখানে যেখানে থাকবে সেখানেই আলাদা বক্স হয়ে যাবে। যেমন: জিএসএম: ২১০+ হেভি কোয়ালিটি, সাইজ: M/L/XL, কালার: ব্ল্যাক" oninput="updatePreview()"></textarea>
+                <small style="color:#777; display:block; margin-top:6px;">💡 কমা (,) দিয়ে প্রতিটা স্পেসিফিকেশন আলাদা করুন — লাইভ প্রিভিউ ও জেনারেট হওয়া কোড দুই জায়গাতেই প্রতিটা কমার পরে নতুন বক্স/লাইন হয়ে যাবে।</small>
             </div>
 
             <div class="form-group">
@@ -863,17 +854,10 @@
             return val.length === 16 ? val + ':00' : val;
         }
 
-        // Add Spec Field dynamically
-        function addSpecField() {
-            const container = document.getElementById('specsContainer');
-            const div = document.createElement('div');
-            div.className = 'spec-item';
-            div.innerHTML = `
-                <input type="text" class="spec-input" placeholder="নতুন স্পেসিফিকেশন লিখুন">
-                <button type="button" class="btn btn-danger" onclick="this.parentElement.remove(); updatePreview();"><i class="fas fa-trash"></i></button>
-            `;
-            container.appendChild(div);
-            updatePreview();
+        // স্পেসিফিকেশন টেক্সটএরিয়া থেকে কমা ধরে ধরে আলাদা আলাদা স্পেসিফিকেশন বের করে
+        function getSpecsArray() {
+            const raw = document.getElementById('specsTextarea').value;
+            return raw.split(',').map(s => s.trim()).filter(Boolean);
         }
 
         // ---- Image Add / Remove / Thumbnails ----
@@ -964,7 +948,7 @@
 
             const specsBox = document.getElementById('previewSpecs');
             specsBox.innerHTML = '';
-            const specVals = [...document.querySelectorAll('.spec-input')].map(i => i.value.trim()).filter(Boolean);
+            const specVals = getSpecsArray();
             if (specVals.length) {
                 specVals.forEach(s => {
                     const d = document.createElement('div');
@@ -1063,13 +1047,8 @@
                 const category = document.getElementById('pCategory').value;
                 const storeId = document.getElementById('pStoreId').value.trim();
 
-                // Get Specs
-                let specs = [];
-                document.querySelectorAll('.spec-input').forEach(input => {
-                    if (input.value.trim()) {
-                        specs.push(`"${input.value.trim()}"`);
-                    }
-                });
+                // Get Specs (কমা দিয়ে আলাদা করা টেক্সটএরিয়া থেকে)
+                const specs = getSpecsArray().map(s => `"${s}"`);
 
                 const typeLine = typeOn
                     ? `\n    types: [\n        ${typeObjects.join(',\n        ')}\n    ],`
