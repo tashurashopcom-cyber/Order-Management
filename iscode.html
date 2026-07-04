@@ -996,7 +996,7 @@
                 alert('অন্তত একটি ছবির লিংক যোগ করুন!');
                 return;
             }
-            const images = currentImages.map(url => `"${url}"`);
+            const images = currentImages.map(url => JSON.stringify(url));
 
             // Get Product Types (only if toggle is ON) — নাম + হেক্স দুইটাই সংগ্রহ করা হয়,
             // মোড অনুযায়ী নিচে আলাদাভাবে ফরম্যাট করা হবে
@@ -1009,7 +1009,7 @@
                 names.forEach((input, i) => {
                     if (input.value.trim()) {
                         typeNames.push(input.value.trim());
-                        typeObjects.push(`{ name: "${input.value.trim()}", hex: "${colors[i].value}" }`);
+                        typeObjects.push(`{ name: ${JSON.stringify(input.value.trim())}, hex: ${JSON.stringify(colors[i].value)} }`);
                     }
                 });
             }
@@ -1026,21 +1026,21 @@
                 const endTime = formatDealTime(document.getElementById('pEndTime').value);
 
                 const typesLine = typeOn && typeNames.length
-                    ? `\n    types: [${typeNames.map(n => `"${n}"`).join(', ')}],`
+                    ? `\n    types: [${typeNames.map(n => JSON.stringify(n)).join(', ')}],`
                     : '';
 
                 outputString = `{
-    id: "${code}",
-    name: "${title}",
+    id: ${JSON.stringify(code)},
+    name: ${JSON.stringify(title)},
     images: [
         ${images.join(',\n        ')}
     ],
     price: ${priceNum},
     oldPrice: ${oldPriceNum === null ? 'null' : oldPriceNum},
-    dealType: "${dealType}",${typesLine}
-    startTime: "${startTime}",
-    endTime: "${endTime}",
-    description: "${desc}"
+    dealType: ${JSON.stringify(dealType)},${typesLine}
+    startTime: ${JSON.stringify(startTime)},
+    endTime: ${JSON.stringify(endTime)},
+    description: ${JSON.stringify(desc)}
 },`;
             } else {
                 // ===== সাধারণ প্রোডাক্ট আউটপুট (আগের মতোই) =====
@@ -1048,23 +1048,23 @@
                 const storeId = document.getElementById('pStoreId').value.trim();
 
                 // Get Specs (কমা দিয়ে আলাদা করা টেক্সটএরিয়া থেকে)
-                const specs = getSpecsArray().map(s => `"${s}"`);
+                const specs = getSpecsArray().map(s => JSON.stringify(s));
 
                 const typeLine = typeOn
                     ? `\n    types: [\n        ${typeObjects.join(',\n        ')}\n    ],`
                     : '';
 
                 outputString = `{
-    code: "${code}", 
-    title: "${title}", 
-    price: "${price}",
+    code: ${JSON.stringify(code)}, 
+    title: ${JSON.stringify(title)}, 
+    price: ${JSON.stringify(price)},
     images: [
         ${images.join(',\n        ')}
     ],
-    desc: "${desc}",
+    desc: ${JSON.stringify(desc)},
     specs: [${specs.join(', ')}],${typeLine}
-    category: "${category}", 
-    storeId: "${storeId}"
+    category: ${JSON.stringify(category)}, 
+    storeId: ${JSON.stringify(storeId)}
 },`;
             }
 
