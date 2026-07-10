@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ideas SHOP — অর্ডার ম্যানেজমেন্ট</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0d1b3d;
+    --navy-2:#132552;
+    --red:#c8102e;
+    --red-dark:#a10c24;
+    --amber:#b3760c;
+    --amber-bg:#fff4e0;
+    --green:#1a8a4a;
+    --green-bg:#e6f7ec;
+    --blue:#3f51b5;
+    --blue-bg:#eef1ff;
+    --cancel:#c92a2a;
+    --cancel-bg:#fdeaea;
+    --bg:#f3f5f8;
+    --card:#ffffff;
+    --line:#e7eaee;
+    --ink:#1c2333;
+    --sub:#7a8296;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    font-family:'Hind Siliguri',-apple-system,'Segoe UI',Arial,sans-serif;
+    color:var(--ink);
+    padding-bottom:30px;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ===== Header ===== */
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    background:linear-gradient(160deg,var(--navy) 0%, var(--navy-2) 100%);
+    color:#fff; padding:16px 18px 14px;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 4px 16px rgba(13,27,61,0.25);
+  }
+  .topbar .brand{display:flex; align-items:center; gap:10px;}
+  .brand .logo{
+    width:34px;height:34px;border-radius:9px;background:var(--red);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
+    box-shadow:0 3px 8px rgba(200,16,46,0.4);
+  }
+  .brand h1{font-size:16.5px; font-weight:700; line-height:1.25;}
+  .brand span{display:block; font-size:11px; color:#aab4cf; font-weight:500;}
+  .refresh-btn{
+    width:38px;height:38px;border-radius:10px;border:1px solid rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.08); color:#fff; font-size:15px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:.2s;
+  }
+  .refresh-btn:active{transform:scale(0.92);}
+  .refresh-btn.spin i{animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ===== Tabs ===== */
+  .tabbar{
+    position:sticky; top:66px; z-index:39;
+    display:flex; gap:6px; padding:10px 14px 8px;
+    background:var(--navy-2);
+  }
+  .tab{
+    flex:1; text-align:center; padding:10px 6px; border-radius:10px;
+    font-size:12.5px; font-weight:700; color:#c4cbe0; cursor:pointer;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+    transition:.2s;
+  }
+  .tab .count{display:block; font-size:16px; font-weight:700; margin-top:2px;}
+  .tab.active{ color:#fff; }
+  .tab[data-tab="pending"].active{background:linear-gradient(135deg,var(--amber),#d8930f); border-color:transparent;}
+  .tab[data-tab="delivered"].active{background:linear-gradient(135deg,var(--green),#20a85a); border-color:transparent;}
+  .tab[data-tab="cancelled"].active{background:linear-gradient(135deg,var(--cancel),var(--red-dark)); border-color:transparent;}
+
+  /* ===== Search ===== */
+  .searchwrap{padding:14px 14px 4px;}
+  .searchbox{
+    display:flex; align-items:center; gap:8px; background:#fff; border:1.5px solid var(--line);
+    border-radius:12px; padding:0 12px; height:46px; box-shadow:0 2px 8px rgba(20,30,60,0.04);
+  }
+  .searchbox i{color:var(--sub); font-size:14px;}
+  .searchbox input{flex:1; border:none; outline:none; font-size:14px; height:100%; background:transparent; font-family:inherit;}
+  .searchbox input::placeholder{color:#a7aebd;}
+
+  /* ===== List ===== */
+  .list{padding:12px 14px 10px; display:flex; flex-direction:column; gap:12px;}
+  .state-msg{ text-align:center; color:var(--sub); font-size:13.5px; padding:40px 20px; }
+  .state-msg i{font-size:26px; display:block; margin-bottom:10px; color:#c3c9d9;}
+
+  .order-card{
+    background:var(--card); border-radius:14px; border:1px solid var(--line);
+    box-shadow:0 2px 10px rgba(20,30,60,0.05); padding:14px 14px 12px; cursor:pointer;
+    transition:.15s;
+  }
+  .order-card:active{transform:scale(0.985);}
+  .oc-top{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px;}
+  .oc-id{font-size:14.5px; font-weight:700; color:var(--navy);}
+  .oc-id small{display:block; font-weight:500; color:var(--sub); font-size:11px; margin-top:1px;}
+
+  .badge{ font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:20px; white-space:nowrap; }
+  .badge.pending{background:var(--amber-bg); color:var(--amber);}
+  .badge.progress{background:var(--blue-bg); color:var(--blue);}
+  .badge.delivered{background:var(--green-bg); color:var(--green);}
+  .badge.cancelled{background:var(--cancel-bg); color:var(--cancel);}
+
+  .oc-row{display:flex; align-items:center; gap:8px; font-size:13px; color:#3c4356; padding:3px 0;}
+  .oc-row i{width:16px; text-align:center; color:var(--sub); font-size:12px;}
+  .oc-row b{font-weight:600;}
+  .oc-addr{color:#5b6274; line-height:1.4;}
+
+  .oc-bottom{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    margin-top:10px; padding-top:10px; border-top:1px dashed var(--line);
+  }
+  .oc-time{font-size:11px; color:var(--sub); display:flex; align-items:center; gap:5px;}
+  .oc-actions{display:flex; gap:8px;}
+  .icon-btn{
+    width:36px;height:36px;border-radius:10px;border:none; display:flex;align-items:center;justify-content:center;
+    font-size:14px; cursor:pointer;
+  }
+  .icon-btn.call{background:var(--green-bg); color:var(--green);}
+  .icon-btn.accept{background:linear-gradient(135deg,var(--red),var(--red-dark)); color:#fff; width:auto; padding:0 14px; font-size:12.5px; font-weight:700; gap:6px;}
+  .icon-btn.accept i{font-size:12px;}
+
+  .type-badge{font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; background:#f1f3f7; color:#666; margin-top:4px; display:inline-block;}
+  .type-badge.road{background:#fff4e5; color:#b3760c;}
+
+  /* ===== Modal / Bottom sheet ===== */
+  .overlay{
+    position:fixed; inset:0; background:rgba(13,20,40,0.55); z-index:60; display:none;
+    align-items:flex-end; justify-content:center;
+  }
+  .overlay.show{display:flex;}
+  .sheet{
+    width:100%; max-width:520px; max-height:92vh; overflow-y:auto; background:#fff;
+    border-radius:20px 20px 0 0; padding:10px 18px 24px; animation:up .25s ease;
+  }
+  @keyframes up{from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+  .sheet-handle{width:40px; height:4px; background:#e0e3e9; border-radius:4px; margin:6px auto 14px;}
+  .sheet-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .sheet-head h3{font-size:16px; color:var(--navy);}
+  .sheet-close{width:32px;height:32px;border-radius:9px;border:none;background:#f1f3f7;color:#555;font-size:14px;cursor:pointer;}
+
+  .info-card{background:#f9fbfc; border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:14px;}
+  .info-row{display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:6px 0; border-bottom:1px dashed #eef0f0;}
+  .info-row:last-child{border-bottom:none;}
+  .info-label{color:#8a90a0; flex-shrink:0;}
+  .info-value{color:#20263a; font-weight:600; text-align:right; word-break:break-word;}
+  .info-value.link{color:var(--blue);}
+
+  .call-row{display:flex; gap:10px; margin-bottom:16px;}
+  .call-row a, .call-row button{
+    flex:1; height:44px; border-radius:10px; border:none; font-size:13.5px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:7px; text-decoration:none;
+  }
+  .call-row .call-link{background:var(--green-bg); color:var(--green);}
+  .call-row .sms-link{background:var(--blue-bg); color:var(--blue);}
+
+  .section-label{font-size:13px; font-weight:700; color:#444; margin:4px 0 10px;}
+  .status-buttons{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;}
+  .status-btn{
+    flex:1 1 auto; min-width:105px; padding:10px 8px; border-radius:10px;
+    border:1.5px solid var(--line); background:#f9f9f9; color:#444;
+    font-size:12.5px; font-weight:600; cursor:pointer; transition:.2s; font-family:inherit;
+  }
+  .status-btn.selected{background:linear-gradient(135deg,var(--red),var(--red-dark)); border-color:transparent; color:#fff; box-shadow:0 4px 10px rgba(200,16,46,0.25);}
+  .status-btn.current{border-color:var(--red); color:var(--red);}
+  .status-btn.current::after{content:' (বর্তমান)'; font-size:10px;}
+
+  .cancel-btn-row{margin-top:4px;}
+  .cancel-btn{
+    width:100%; padding:11px; border-radius:10px; border:1.5px solid #ffd9d9;
+    background:#fff5f5; color:#c92a2a; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;
+  }
+  .cancel-btn.selected{background:#c92a2a; color:#fff; border-color:#c92a2a;}
+
+  .input-group{margin:16px 0;}
+  .input-group label{display:block; font-size:13px; color:#555; margin-bottom:6px; font-weight:600;}
+  .input-group textarea{
+    width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px;
+    font-size:14px; background:#f9f9f9; resize:vertical; min-height:56px; font-family:inherit;
+  }
+  .input-group textarea:focus{outline:none; border-color:var(--red); background:#fff;}
+  .hint-text{font-size:11px; color:#999; margin:-10px 0 14px; line-height:1.4;}
+  .password-section{margin-top:18px;}
+  .password-row{display:flex; gap:10px; align-items:center; margin-top:8px;}
+  .password-row input{flex:1; padding:12px 14px; border:1px solid var(--line); border-radius:10px; font-size:14px; background:#f9f9f9;}
+  .password-row input:focus{outline:none; border-color:var(--red); background:#fff;}
+  .save-pass-btn{padding:12px 14px; border:none; border-radius:10px; background:linear-gradient(135deg,var(--red),var(--red-dark)); color:#fff; font-size:13px; cursor:pointer; font-weight:700;}
+
+  .confirm-btn{
+    width:100%; padding:14px; border-radius:11px; border:none;
+    background:linear-gradient(135deg,var(--red),var(--red-dark)); color:#fff;
+    font-size:14.5px; font-weight:700; cursor:pointer; font-family:inherit;
+  }
+  .confirm-btn:disabled{background:#e6c3ca; cursor:not-allowed;}
+
+  .note-block{background:#f9fbfc; border:1px solid var(--line); border-radius:12px; padding:12px 14px; font-size:13px; color:#555; margin-bottom:10px; line-height:1.5;}
+  .note-block b{color:var(--navy);}
+
+  .toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#20263a; color:#fff; padding:13px 20px; border-radius:11px;
+    display:flex; align-items:center; gap:9px; font-size:13.5px; font-weight:500;
+    z-index:999; box-shadow:0 6px 20px rgba(0,0,0,0.25); opacity:0; pointer-events:none;
+    transition:opacity .3s ease, transform .3s ease; max-width:88%; text-align:left;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto;}
+  .toast.error{background:var(--cancel);}
+  .toast.success{background:var(--green);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">IS</div>
+    <div>
+      <h1>অর্ডার ম্যানেজমেন্ট</h1>
+      <span>Ideas SHOP Admin</span>
+    </div>
+  </div>
+  <button class="refresh-btn" id="refreshBtn" onclick="loadOrders()" title="রিফ্রেশ"><i class="fas fa-rotate"></i></button>
+</div>
+
+<div class="tabbar">
+  <div class="tab active" data-tab="pending" onclick="switchTab('pending')">
+    পেন্ডিং <span class="count" id="countPending">0</span>
+  </div>
+  <div class="tab" data-tab="delivered" onclick="switchTab('delivered')">
+    ডেলিভারড <span class="count" id="countDelivered">0</span>
+  </div>
+  <div class="tab" data-tab="cancelled" onclick="switchTab('cancelled')">
+    ক্যান্সেলড <span class="count" id="countCancelled">0</span>
+  </div>
+</div>
+
+<div class="searchwrap">
+  <div class="searchbox">
+    <i class="fas fa-magnifying-glass"></i>
+    <input type="text" id="searchInput" placeholder="অর্ডার আইডি, নাম বা মোবাইল দিয়ে খুঁজুন" oninput="renderList()">
+  </div>
+</div>
+
+<div class="list" id="listWrap">
+  <div class="state-msg"><i class="fas fa-spinner fa-spin"></i>অর্ডার লোড হচ্ছে...</div>
+</div>
+
+<!-- ===== Bottom Sheet Modal ===== -->
+<div class="overlay" id="overlay" onclick="if(event.target===this) closeSheet()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h3><i class="fas fa-receipt"></i> অর্ডার বিস্তারিত</h3>
+      <button class="sheet-close" onclick="closeSheet()"><i class="fas fa-xmark"></i></button>
+    </div>
+
+    <div class="info-card">
+      <div class="info-row"><span class="info-label">অর্ডার আইডি</span><span class="info-value mono" id="mOrderId">-</span></div>
+      <div class="info-row"><span class="info-label">নাম</span><span class="info-value" id="mName">-</span></div>
+      <div class="info-row"><span class="info-label">মোবাইল</span><span class="info-value mono" id="mMobile">-</span></div>
+      <div class="info-row"><span class="info-label">ঠিকানা</span><span class="info-value" id="mAddress">-</span></div>
+      <div class="info-row"><span class="info-label">অর্ডারের সময়</span><span class="info-value" id="mTime">-</span></div>
+      <div class="info-row"><span class="info-label">বর্তমান স্ট্যাটাস</span><span class="info-value" id="mStatus">-</span></div>
+      <div id="mTypeBadgeWrap"></div>
+    </div>
+
+    <div class="call-row">
+      <a href="#" id="mCallLink" class="call-link"><i class="fas fa-phone"></i> কল করুন</a>
+      <a href="#" id="mSmsLink" class="sms-link"><i class="fas fa-comment-sms"></i> এসএমএস</a>
+    </div>
+
+    <div id="mNoteBlockWrap"></div>
+
+    <div id="mUpdateSection">
+      <p class="section-label">নতুন স্ট্যাটাস সিলেক্ট করুন</p>
+      <div class="status-buttons" id="mStatusButtons"></div>
+
+      <div class="cancel-btn-row">
+        <button class="cancel-btn" id="mCancelBtn" onclick="selectCancel()">❌ অর্ডার ক্যানসেল করুন</button>
+      </div>
+
+      <div class="input-group">
+        <label id="mNoteLabel">অপশনাল নোট</label>
+        <textarea id="mNoteInput" placeholder="যেমন: ঢাকা হাব থেকে বের হয়েছে (ঐচ্ছিক)"></textarea>
+      </div>
+      <p class="hint-text" id="mNoteHint">তারিখ ও সময় অটোমেটিক যুক্ত হয়ে যাবে, আলাদা করে লিখতে হবে না।</p>
+
+      <button class="confirm-btn" id="mConfirmBtn" onclick="confirmUpdate()" disabled>আপডেট কনফার্ম করুন</button>
+
+      <div class="password-section">
+        <label>স্টক আপডেট পাসওয়ার্ড</label>
+        <div class="password-row">
+          <input id="adminPasswordInput" type="password" placeholder="পাসওয়ার্ড দিন">
+          <button type="button" class="save-pass-btn" onclick="saveAdminPassword()">সেভ</button>
+        </div>
+        <p class="hint-text">ডেলিভারড অর্ডার স্টক আপডেটের জন্য এখানে পাসওয়ার্ডটি সংরক্ষণ করুন।</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toastNotification" class="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastMessage"></span>
+</div>
+
+<script>
+/* =========================================================
+   ⚠️ এখানে আপনার Google Apps Script Web App URL বসান
+   (Code.gs ডিপ্লয় করার পর যে URL পাবেন সেটা এখানে বসাবেন)
+   ========================================================= */
+const GAS_API = "https://script.google.com/macros/s/AKfycbyFfHmGaRQ1BLsFWG2VQLojZHRcfRfkzql0utD5vc36nz4EscqfZjoAjKLAEJ31ZvkO/exec";
+const WORKER_URL = "https://tashura-shop.tashurashop-com.workers.dev/";
+const PRODUCT_API = `${WORKER_URL}/api/products`;
+
+function getAdminPassword() {
+  const saved = localStorage.getItem('admin_pass') || '';
+  if (saved) return saved;
+  const field = document.getElementById('adminPasswordInput');
+  if (field && field.value.trim()) {
+    const pass = field.value.trim();
+    localStorage.setItem('admin_pass', pass);
+    return pass;
+  }
+  return '';
+}
+
+function saveAdminPassword() {
+  const field = document.getElementById('adminPasswordInput');
+  if (!field) return;
+  const pass = field.value.trim();
+  if (!pass) {
+    showToast('পাসওয়ার্ডটি লিখুন এবং পুনরায় চেষ্টা করুন।', 'error');
+    return;
+  }
+  localStorage.setItem('admin_pass', pass);
+  showToast('অ্যাডমিন পাসওয়ার্ড সংরক্ষণ করা হয়েছে।', 'success');
+}
+
+function parseOrderDetails(order) {
+  const raw = (order['Order Details'] || order['OrderDetails'] || order.Details || order.Items || '').toString().trim();
+  if (!raw) return [];
+  return raw.split(/\r?\n|,/).map(item => item.trim()).filter(Boolean).map(item => {
+    let code = item;
+    let qty = 1;
+    const matchQty = item.match(/(.+?)\s*[x×*]\s*(\d+)/i);
+    if (matchQty) {
+      code = matchQty[1].trim();
+      qty = parseInt(matchQty[2], 10) || 1;
+      return { code, qty };
+    }
+    const parts = item.split(/[:\-]/).map(p => p.trim());
+    if (parts.length === 2 && /\d+/.test(parts[1])) {
+      code = parts[0];
+      qty = parseInt(parts[1], 10) || 1;
+      return { code, qty };
+    }
+    const lastNumber = item.match(/(\d+)\s*$/);
+    if (lastNumber) {
+      qty = parseInt(lastNumber[1], 10) || 1;
+      code = item.replace(/(\d+)\s*$/, '').trim();
+    }
+    return { code, qty };
+  }).filter(entry => entry.code);
+}
+
+async function decrementStockForOrder(order) {
+  const items = parseOrderDetails(order);
+  if (!items.length) return { ok: false, message: 'Order Details ফিল্ডে প্রোডাক্ট কোড/পরিমাণ পাওয়া যায়নি।' };
+
+  const password = getAdminPassword();
+  if (!password) return { ok: false, message: 'অ্যাডমিন পাসওয়ার্ড পাওয়া যায়নি।' };
+
+  const res = await fetch(PRODUCT_API);
+  if (!res.ok) return { ok: false, message: 'প্রোডাক্ট লিস্ট লোড করতে সমস্যা হয়েছে।' };
+  const json = await res.json();
+  const products = json.products || [];
+
+  const updates = [];
+  for (const item of items) {
+    const code = item.code.toString().trim();
+    const product = products.find(p => p.code && p.code.toString().trim().toLowerCase() === code.toLowerCase());
+    if (!product) continue;
+    const newStock = Math.max(0, (parseInt(product.stock, 10) || 0) - item.qty);
+    updates.push({ code: product.code, stock: newStock });
+  }
+
+  if (!updates.length) {
+    return { ok: false, message: 'কোনো প্রোডাক্ট কোড মেলেনি, তাই স্টক আপডেট হয়নি।' };
+  }
+
+  for (const update of updates) {
+    const resUpdate = await fetch(`${PRODUCT_API}/${encodeURIComponent(update.code)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Password': password },
+      body: JSON.stringify({ stock: update.stock })
+    });
+    const result = await resUpdate.json();
+    if (!resUpdate.ok || !result.ok) {
+      return { ok: false, message: `প্রোডাক্ট ${update.code} আপডেট করতে ব্যর্থ হয়েছে।` };
+    }
+  }
+
+  return { ok: true };
+}
+
+// হোম ডেলিভারির জন্য সব স্ট্যাটাস অপশন
+const HOME_STATUSES = [
+  { key: 'Pending',    label: 'Pending' },
+  { key: 'Processing', label: 'Processing' },
+  { key: 'Shipped',    label: 'Shipped' },
+  { key: 'In Division',label: 'In Division' },
+  { key: 'In District',label: 'In District' },
+  { key: 'With Rider', label: 'Out for Delivery' },
+  { key: 'Delivered',  label: 'Delivered' }
+];
+// রোড রিসিভ ডেলিভারির জন্য (ডিভিশন/ডিস্ট্রিক্ট স্কিপ)
+const ROAD_STATUSES = [
+  { key: 'Pending',    label: 'Pending' },
+  { key: 'Processing', label: 'Processing' },
+  { key: 'Shipped',    label: 'Shipped' },
+  { key: 'With Rider', label: 'Out for Delivery' },
+  { key: 'Delivered',  label: 'Delivered' }
+];
+const TIME_FIELD_CANDIDATES = ['Timestamp', 'Order Time', 'Date', 'TimeStamp', 'Order Date'];
+
+let allOrders = [];
+let activeTab = getInitialTab();
+let currentOrder = null;
+let selectedStatusKey = null;
+let isCancelSelected = false;
+
+function getInitialTab() {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  return ['pending', 'delivered', 'cancelled'].includes(tab) ? tab : 'pending';
+}
+
+function setActiveTabVisual() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === activeTab));
+}
+
+setActiveTabVisual();
+
+function isRoadReceiveAddress(address) {
+  return (address || "").includes("রোড রিসিভ ডেলিভারি");
+}
+
+function normStatus(s) {
+  return (s || "").toString().trim().toLowerCase();
+}
+
+function isDelivered(o) { return normStatus(o.Status) === 'delivered'; }
+function isCancelled(o) {
+  const s = normStatus(o.Status);
+  return s === 'canceled' || s === 'cancelled';
+}
+function isPending(o) { return !isDelivered(o) && !isCancelled(o); }
+
+function getOrderTime(o) {
+  for (const f of TIME_FIELD_CANDIDATES) {
+    if (o[f]) return o[f];
+  }
+  return null;
+}
+
+/* ===== লোড অর্ডারস ===== */
+function loadOrders() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spin');
+  document.getElementById('listWrap').innerHTML = '<div class="state-msg"><i class="fas fa-spinner fa-spin"></i>অর্ডার লোড হচ্ছে...</div>';
+
+  fetch(GAS_API)
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(json => {
+      if (!json.ok) throw new Error(json.message || 'ডাটা লোড ব্যর্থ');
+      allOrders = json.data || [];
+      updateCounts();
+      renderList();
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('listWrap').innerHTML =
+        '<div class="state-msg"><i class="fas fa-triangle-exclamation"></i>অর্ডার লোড করা যায়নি। GAS_API URL ঠিক আছে কিনা দেখুন।</div>';
+      showToast("অর্ডার লোড করতে সমস্যা হয়েছে!", "error");
+    })
+    .finally(() => btn.classList.remove('spin'));
+}
+
+function updateCounts() {
+  document.getElementById('countPending').innerText = allOrders.filter(isPending).length;
+  document.getElementById('countDelivered').innerText = allOrders.filter(isDelivered).length;
+  document.getElementById('countCancelled').innerText = allOrders.filter(isCancelled).length;
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  setActiveTabVisual();
+  const url = new URL(window.location.href);
+  url.searchParams.set('tab', tab);
+  window.history.replaceState({}, '', url);
+  renderList();
+}
+
+function statusBadge(o) {
+  if (isDelivered(o)) return '<span class="badge delivered">ডেলিভারড</span>';
+  if (isCancelled(o)) return '<span class="badge cancelled">ক্যান্সেলড</span>';
+  if (normStatus(o.Status) === 'pending' || !o.Status) return '<span class="badge pending">নতুন / পেন্ডিং</span>';
+  return '<span class="badge progress">' + (o.Status || 'Processing') + '</span>';
+}
+
+/* ===== লিস্ট রেন্ডার ===== */
+function renderList() {
+  const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  let filtered = allOrders.filter(o => {
+    if (activeTab === 'pending') return isPending(o);
+    if (activeTab === 'delivered') return isDelivered(o);
+    return isCancelled(o);
+  });
+
+  if (q) {
+    filtered = filtered.filter(o =>
+      (o['Order ID'] || '').toString().toLowerCase().includes(q) ||
+      (o.Name || '').toLowerCase().includes(q) ||
+      (o.Mobile || '').toString().toLowerCase().includes(q)
+    );
+  }
+
+  // নতুন অর্ডার সবার উপরে (সময় অনুযায়ী সাজানো, না থাকলে যেভাবে আছে সেভাবে)
+  filtered = filtered.slice().reverse();
+
+  const wrap = document.getElementById('listWrap');
+  if (filtered.length === 0) {
+    const msgs = {
+      pending: 'কোনো পেন্ডিং অর্ডার নেই। সব ক্লিয়ার! 🎉',
+      delivered: 'এখনো কোনো অর্ডার ডেলিভার হয়নি।',
+      cancelled: 'কোনো ক্যান্সেলড অর্ডার নেই।'
+    };
+    wrap.innerHTML = '<div class="state-msg"><i class="fas fa-inbox"></i>' + msgs[activeTab] + '</div>';
+    return;
+  }
+
+  wrap.innerHTML = filtered.map(o => renderCard(o)).join('');
+}
+
+function renderCard(o) {
+  const isRoad = isRoadReceiveAddress(o.Address);
+  const time = getOrderTime(o);
+  const orderId = (o['Order ID'] || '').toString();
+  const isNewPending = normStatus(o.Status) === 'pending' || !o.Status;
+
+  return `
+  <div class="order-card" onclick="openSheet('${escapeAttr(orderId)}')">
+    <div class="oc-top">
+      <div class="oc-id mono">#${escapeHtml(orderId)}
+        <small>${isRoad ? '🚌 রোড রিসিভ' : '🏠 হোম ডেলিভারি'}</small>
+      </div>
+      ${statusBadge(o)}
+    </div>
+    <div class="oc-row"><i class="fas fa-user"></i><b>${escapeHtml(o.Name || '-')}</b></div>
+    <div class="oc-row"><i class="fas fa-phone"></i><span class="mono">${escapeHtml(o.Mobile || '-')}</span></div>
+    <div class="oc-row oc-addr"><i class="fas fa-location-dot"></i><span>${escapeHtml(o.Address || '-')}</span></div>
+    <div class="oc-bottom">
+      <div class="oc-time"><i class="fas fa-clock"></i>${time ? escapeHtml(time) : 'সময় পাওয়া যায়নি'}</div>
+      <div class="oc-actions">
+        ${o.Mobile ? `<a class="icon-btn call" href="tel:${escapeAttr(o.Mobile)}" onclick="event.stopPropagation()" title="কল করুন"><i class="fas fa-phone"></i></a>` : ''}
+        ${isNewPending ? `<button class="icon-btn accept" onclick="event.stopPropagation(); quickAccept('${escapeAttr(orderId)}')"><i class="fas fa-check"></i> একসেপ্ট</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function escapeHtml(s) {
+  return (s || '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+/* ===== দ্রুত একসেপ্ট (Pending -> Processing) ===== */
+function quickAccept(orderId) {
+  const order = allOrders.find(o => (o['Order ID'] || '').toString() === orderId);
+  if (!order) return;
+  patchOrder(orderId, { "Status": "Processing", "Status Updated At": nowStr() }, () => {
+    showToast("অর্ডার একসেপ্ট করা হয়েছে!", "success");
+  });
+}
+
+/* ===== বটম শীট খোলা ===== */
+function openSheet(orderId) {
+  const order = allOrders.find(o => (o['Order ID'] || '').toString() === orderId);
+  if (!order) return;
+  currentOrder = order;
+  selectedStatusKey = null;
+  isCancelSelected = false;
+
+  document.getElementById('mOrderId').innerText = order['Order ID'] || '-';
+  document.getElementById('mName').innerText = order.Name || '-';
+  document.getElementById('mMobile').innerText = order.Mobile || '-';
+  document.getElementById('mAddress').innerText = order.Address || '-';
+  document.getElementById('mTime').innerText = getOrderTime(order) || '-';
+  document.getElementById('mStatus').innerHTML = statusBadge(order);
+
+  const isRoad = isRoadReceiveAddress(order.Address);
+  document.getElementById('mTypeBadgeWrap').innerHTML =
+    `<span class="type-badge ${isRoad ? 'road' : ''}">${isRoad ? '🚌 রোড রিসিভ ডেলিভারি' : '🏠 হোম ডেলিভারি'}</span>`;
+
+  const mobile = order.Mobile || '';
+  document.getElementById('mCallLink').href = mobile ? 'tel:' + mobile : '#';
+  document.getElementById('mSmsLink').href = mobile ? 'sms:' + mobile : '#';
+
+  // নোট / ক্যান্সেল রিজন ব্লক
+  let noteHtml = '';
+  if (isCancelled(order) && order.CancelReason) {
+    noteHtml = `<div class="note-block"><b>ক্যানসেলের কারণ:</b> ${escapeHtml(order.CancelReason)}</div>`;
+  } else if (order['Status Note']) {
+    noteHtml = `<div class="note-block"><b>সর্বশেষ নোট:</b> ${escapeHtml(order['Status Note'])}</div>`;
+  }
+  document.getElementById('mNoteBlockWrap').innerHTML = noteHtml;
+
+  // ডেলিভারড/ক্যান্সেলড অর্ডারে স্ট্যাটাস আপডেট সেকশন লুকানো (রিড-অনলি)
+  const updateSection = document.getElementById('mUpdateSection');
+  if (isDelivered(order) || isCancelled(order)) {
+    updateSection.style.display = 'none';
+  } else {
+    updateSection.style.display = 'block';
+    renderStatusButtons(order);
+  }
+
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeSheet() {
+  document.getElementById('overlay').classList.remove('show');
+  currentOrder = null;
+}
+
+function renderStatusButtons(order) {
+  const isRoad = isRoadReceiveAddress(order.Address);
+  const statuses = isRoad ? ROAD_STATUSES : HOME_STATUSES;
+  const currentStatusNorm = normStatus(order.Status);
+
+  const wrap = document.getElementById('mStatusButtons');
+  wrap.innerHTML = '';
+  document.getElementById('mCancelBtn').classList.remove('selected');
+  updateNoteLabel();
+  updateConfirmState();
+
+  statuses.forEach(s => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'status-btn';
+    btn.innerText = s.label;
+    btn.dataset.key = s.key;
+    if (s.key.toLowerCase() === currentStatusNorm) btn.classList.add('current');
+    btn.addEventListener('click', () => selectStatus(s.key, btn));
+    wrap.appendChild(btn);
+  });
+}
+
+function selectStatus(key, btnEl) {
+  isCancelSelected = false;
+  document.getElementById('mCancelBtn').classList.remove('selected');
+  selectedStatusKey = key;
+  document.querySelectorAll('#mStatusButtons .status-btn').forEach(b => b.classList.remove('selected'));
+  btnEl.classList.add('selected');
+  updateNoteLabel();
+  updateConfirmState();
+}
+
+function selectCancel() {
+  selectedStatusKey = null;
+  document.querySelectorAll('#mStatusButtons .status-btn').forEach(b => b.classList.remove('selected'));
+  isCancelSelected = !isCancelSelected;
+  document.getElementById('mCancelBtn').classList.toggle('selected', isCancelSelected);
+  updateNoteLabel();
+  updateConfirmState();
+}
+
+function updateNoteLabel() {
+  const label = document.getElementById('mNoteLabel');
+  const hint = document.getElementById('mNoteHint');
+  if (isCancelSelected) {
+    label.innerText = 'ক্যানসেলের কারণ';
+    hint.innerText = 'কাস্টমারকে এই কারণটাই দেখানো হবে, লেখা ভালো করে দিন।';
+  } else {
+    label.innerText = 'অপশনাল নোট';
+    hint.innerText = 'তারিখ ও সময় অটোমেটিক যুক্ত হয়ে যাবে, আলাদা করে লিখতে হবে না।';
+  }
+}
+
+function updateConfirmState() {
+  document.getElementById('mConfirmBtn').disabled = !(selectedStatusKey || isCancelSelected);
+}
+
+function nowStr() {
+  return new Date().toLocaleString('en-US', { hour12: true });
+}
+
+function confirmUpdate() {
+  if (!currentOrder) return;
+  if (!selectedStatusKey && !isCancelSelected) return;
+
+  const orderId = currentOrder['Order ID'];
+  const note = document.getElementById('mNoteInput').value.trim();
+
+  let patchData;
+  const isDeliveredNow = selectedStatusKey && selectedStatusKey.toLowerCase() === 'delivered';
+  if (isCancelSelected) {
+    patchData = {
+      "Status": "Canceled",
+      "CancelReason": note || "কোনো কারণ উল্লেখ করা হয়নি।",
+      "Status Updated At": nowStr()
+    };
+  } else {
+    patchData = {
+      "Status": selectedStatusKey,
+      "Status Updated At": nowStr(),
+      "Status Note": note
+    };
+  }
+
+  const confirmBtn = document.getElementById('mConfirmBtn');
+  confirmBtn.disabled = true;
+  confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> আপডেট হচ্ছে...';
+
+  const finalizeUpdate = () => {
+    confirmBtn.innerHTML = 'আপডেট কনফার্ম করুন';
+    document.getElementById('mNoteInput').value = '';
+    closeSheet();
+    showToast("স্ট্যাটাস সফলভাবে আপডেট হয়েছে!", "success");
+  };
+
+  const handleUpdateError = () => {
+    confirmBtn.innerHTML = 'আপডেট কনফার্ম করুন';
+    confirmBtn.disabled = false;
+  };
+
+  const afterPatch = async () => {
+    finalizeUpdate();
+  };
+
+  patchOrder(orderId, patchData, () => {
+    afterPatch();
+  }, handleUpdateError);
+}
+
+/* ===== Google Apps Script এ আপডেট পাঠানো =====
+   text/plain কন্টেন্ট-টাইপ ব্যবহার করা হচ্ছে যাতে ব্রাউজার
+   CORS প্রি-ফ্লাইট (OPTIONS) রিকোয়েস্ট না পাঠায়, কারণ Apps
+   Script Web App সেটা হ্যান্ডেল করতে পারে না। */
+function patchOrder(orderId, updates, onSuccess, onError) {
+  fetch(GAS_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ orderId, updates })
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.ok && result.updated >= 1) {
+      // লোকাল ডাটা আপডেট করে UI রিফ্রেশ করা হলো
+      const idx = allOrders.findIndex(o => (o['Order ID'] || '').toString() === orderId.toString());
+      if (idx > -1) Object.assign(allOrders[idx], updates);
+      updateCounts();
+      renderList();
+      if (onSuccess) onSuccess();
+    } else {
+      showToast(result.message || "আপডেট ব্যর্থ হয়েছে, আবার চেষ্টা করুন।", "error");
+      if (onError) onError();
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    showToast("নেটওয়ার্ক সমস্যা! আবার চেষ্টা করুন।", "error");
+    if (onError) onError();
+  });
+}
+
+function showToast(message, type) {
+  const toast = document.getElementById('toastNotification');
+  const icon = document.getElementById('toastIcon');
+  const msg = document.getElementById('toastMessage');
+  if (!toast || !icon || !msg) return;
+  msg.innerText = message;
+  icon.innerText = (type === 'error') ? '✕' : '✓';
+  toast.className = 'toast show ' + (type || '');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => { toast.className = 'toast'; }, 3000);
+}
+
+function loadSavedAdminPassword() {
+  const pass = localStorage.getItem('admin_pass') || '';
+  const field = document.getElementById('adminPasswordInput');
+  if (field && pass) {
+    field.value = pass;
+  }
+}
+
+// প্রথমবার লোড
+loadOrders();
+loadSavedAdminPassword();
+</script>
+</body>
+</html>

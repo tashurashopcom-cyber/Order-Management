@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ideas SHOP — Admin CMS</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{ --red:#c8102e; --navy:#0b1d3a; --navy2:#122a52; --blue:#1e4d8b; }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 55%,var(--blue) 100%);
+    background-size:200% 200%; animation:drift 12s ease infinite;
+    padding:20px; color:#fff;
+  }
+  @keyframes drift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+  .card{
+    max-width:380px; width:100%; text-align:center;
+    background:rgba(255,255,255,.06); backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.12); border-radius:20px;
+    padding:44px 32px; box-shadow:0 20px 60px rgba(0,0,0,.35);
+    animation:rise .6s ease;
+  }
+  @keyframes rise{from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:translateY(0)}}
+
+  .logo{
+    width:74px; height:74px; margin:0 auto 18px; border-radius:18px;
+    background:linear-gradient(135deg,var(--red),#ff4d5e);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:26px; box-shadow:0 10px 26px rgba(200,16,46,.4);
+  }
+
+  h1{margin:0 0 4px; font-size:24px; letter-spacing:.3px;}
+  .sub{margin:0 0 26px; font-size:12.5px; color:#b9c6de; letter-spacing:1.5px; text-transform:uppercase;}
+
+  a.enter{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    background:var(--red); color:#fff; text-decoration:none;
+    padding:14px; border-radius:12px; font-weight:700; font-size:15px;
+    box-shadow:0 10px 24px rgba(200,16,46,.35); transition:.2s;
+  }
+  a.enter:hover{ background:#e0122f; transform:translateY(-2px); }
+
+  .dev{
+    margin-top:26px; padding-top:18px; border-top:1px solid rgba(255,255,255,.12);
+    font-size:11.5px; color:#8fa3c8;
+  }
+  .dev b{ color:#fff; font-weight:700; }
+  .dev i{ margin-left:4px; color:var(--red); }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo">IS</div>
+    <h1>Ideas SHOP</h1>
+    <p class="sub">Admin Control Panel</p>
+
+    <a class="enter" href="admin-panel.html">
+      <i class="fas fa-right-to-bracket"></i> প্রবেশ করুন
+    </a>
+
+    <div class="dev">
+      App Owned &amp; Managed by <b>Ideas SHOP</b><br>
+      Developed by <b>MD NABIL</b> <i class="fas fa-code"></i>
+    </div>
+  </div>
+
+</body>
+</html>

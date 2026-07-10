@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>কাস্টমার তালিকা — Ideas SHOP Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{
+    --red:#c8102e; --navy:#0b1d3a; --navy2:#122a52; --blue:#1e4d8b;
+    --bg:#f4f6f9; --card:#ffffff; --border:#e2e6ec; --text:#1a2230; --muted:#6b7688;
+    --green:#2e7d32; --amber:#c77700; --sidebar-w:250px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg);color:var(--text);}
+  a{text-decoration:none;color:inherit;}
+
+  /* ===== Login ===== */
+  #loginScreen{max-width:360px;margin:80px auto;background:var(--card);padding:28px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08);text-align:center;}
+  #loginScreen i{font-size:34px;color:var(--red);margin-bottom:10px;}
+  #loginScreen input{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;margin:12px 0;}
+  #loginScreen button{width:100%;background:var(--red);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;}
+  #loginError{color:var(--red);font-size:13px;min-height:18px;}
+
+  /* ===== App shell ===== */
+  #appScreen{display:none;min-height:100vh;}
+  .shell{display:flex;min-height:100vh;}
+
+  /* Sidebar */
+  #sidebar{
+    width:var(--sidebar-w);flex-shrink:0;background:var(--navy);color:#fff;
+    position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:30;
+    transition:transform .25s ease;
+  }
+  .side-brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .side-brand .logo{width:36px;height:36px;border-radius:8px;background:var(--red);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+  .side-brand div b{display:block;font-size:14px;}
+  .side-brand div span{display:block;font-size:11px;color:#9fb0cc;}
+
+  nav.menu{padding:10px 8px 24px;}
+  .menu-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;font-size:13.5px;color:#d7dfee;cursor:pointer;margin-bottom:2px;}
+  .menu-item i.ico{width:18px;text-align:center;color:#8fa3c8;font-size:14px;}
+  .menu-item:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .menu-item.active{background:var(--red);color:#fff;}
+  .menu-item.active i.ico{color:#fff;}
+
+  details.menu-group{margin-bottom:2px;}
+  details.menu-group>summary{
+    list-style:none;display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;
+    font-size:13.5px;color:#d7dfee;cursor:pointer;
+  }
+  details.menu-group>summary::-webkit-details-marker{display:none;}
+  details.menu-group>summary:hover{background:rgba(255,255,255,.06);color:#fff;}
+  details.menu-group>summary i.ico{width:18px;text-align:center;color:#8fa3c8;font-size:14px;}
+  details.menu-group>summary i.chev{margin-left:auto;font-size:11px;transition:transform .2s;color:#8fa3c8;}
+  details.menu-group[open]>summary i.chev{transform:rotate(180deg);}
+  .submenu{padding:2px 0 6px 40px;display:flex;flex-direction:column;}
+  .submenu a, .submenu .menu-item{padding:8px 10px;font-size:13px;color:#b9c6de;border-radius:6px;}
+  .submenu a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .submenu a.active{color:#fff;font-weight:700;}
+
+  .side-foot{padding:14px 16px;font-size:11px;color:#7c8db3;border-top:1px solid rgba(255,255,255,.08);margin-top:6px;}
+
+  /* Main area */
+  #mainArea{flex:1;margin-left:var(--sidebar-w);min-width:0;}
+  header.topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+  header.topbar h1{font-size:17px;margin:0;color:var(--navy);}
+  #menuToggle{display:none;background:none;border:none;font-size:18px;color:var(--navy);cursor:pointer;margin-right:10px;}
+  .topbar-left{display:flex;align-items:center;}
+  #logoutBtn{background:var(--red);color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;}
+
+  .wrap{max-width:1040px;margin:0 auto;padding:18px;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px;}
+  .stat-card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.05);border-left:4px solid var(--red);}
+  .stat-card .num{font-size:24px;font-weight:800;color:var(--navy);}
+  .stat-card .lbl{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .stat-card.blue{border-left-color:var(--blue);}
+  .stat-card.green{border-left-color:var(--green);}
+
+  .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:16px;}
+
+  .toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .search-box{flex:1;min-width:200px;position:relative;}
+  .search-box i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;}
+  .search-box input{width:100%;padding:11px 12px 11px 34px;border:1px solid var(--border);border-radius:8px;font-size:14px;}
+  .refresh-btn{background:var(--navy);color:#fff;border:none;padding:0 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;}
+
+  .clist{display:flex;flex-direction:column;gap:10px;}
+  .citem{border:1px solid var(--border);border-radius:10px;background:#fff;overflow:hidden;}
+  .citem-head{display:flex;gap:12px;padding:12px;align-items:center;cursor:pointer;}
+  .avatar{width:42px;height:42px;border-radius:50%;background:var(--navy2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}
+  .cinfo{flex:1;min-width:0;}
+  .cname{font-weight:700;font-size:14.5px;}
+  .cphone{font-size:12.5px;color:var(--muted);}
+  .cmeta{display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+  .badge{font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:20px;}
+  .badge.orders{background:#eef0fb;color:var(--blue);}
+  .badge.delivered{background:#e8f5e9;color:var(--green);}
+  .badge.pending{background:#fff4e0;color:var(--amber);}
+  .badge.cancelled{background:#fdecee;color:var(--red);}
+  .icon-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;color:var(--navy);cursor:pointer;font-size:13px;flex-shrink:0;}
+  .icon-btn.call:hover{border-color:var(--green);color:var(--green);}
+  .icon-btn.wa:hover{border-color:#25D366;color:#25D366;}
+  .chev-toggle{transition:transform .2s;color:var(--muted);font-size:12px;flex-shrink:0;}
+  .citem.open .chev-toggle{transform:rotate(180deg);}
+
+  .citem-body{display:none;padding:0 14px 14px 68px;border-top:1px solid var(--border);}
+  .citem.open .citem-body{display:block;padding-top:10px;}
+  .order-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px;}
+  .order-row:last-child{border-bottom:none;}
+  .order-id{font-weight:600;color:var(--navy);}
+  .reg-date{font-size:11.5px;color:var(--muted);margin-top:4px;}
+  .no-orders{color:var(--muted);font-size:12.5px;padding:6px 0;}
+
+  .empty{text-align:center;color:var(--muted);padding:30px;}
+  .loading{text-align:center;color:var(--muted);padding:30px;}
+
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:100;max-width:90%;text-align:center;}
+  #toast.show{opacity:1;}
+  #toast.error{background:var(--red);}
+  #toast.success{background:#2e7d32;}
+
+  #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:25;}
+
+  @media(max-width:880px){
+    #sidebar{transform:translateX(-100%);}
+    #sidebar.open{transform:translateX(0);}
+    #mainArea{margin-left:0;}
+    #menuToggle{display:inline-block;}
+    #overlay.show{display:block;}
+    .citem-body{padding-left:14px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <i class="fas fa-lock"></i>
+  <h2 style="margin:0 0 4px;color:var(--navy);">Ideas SHOP Admin</h2>
+  <p style="color:var(--muted);font-size:13px;margin:0;">পাসওয়ার্ড দিয়ে লগইন করুন</p>
+  <input type="password" id="passInput" placeholder="পাসওয়ার্ড">
+  <button onclick="login()">লগইন করুন</button>
+  <div id="loginError"></div>
+</div>
+
+<div id="appScreen">
+  <div class="shell">
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="sidebar">
+      <div class="side-brand">
+        <div class="logo">IS</div>
+        <div>
+          <b>Ideas SHOP</b>
+          <span>Admin CMS</span>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <a class="menu-item" href="admin-panel.html">
+          <i class="fas fa-gauge-high ico"></i> ড্যাশবোর্ড
+        </a>
+
+        <details class="menu-group">
+          <summary><i class="fas fa-box ico"></i> প্রোডাক্টস <i class="fas fa-chevron-down chev"></i></summary>
+          <div class="submenu">
+            <a href="admin-panel.html"><i class="fas fa-plus ico"></i> প্রোডাক্ট যোগ করুন</a>
+            <a href="admin-panel.html"><i class="fas fa-list ico"></i> সব প্রোডাক্ট</a>
+            <a href="#"><i class="fas fa-tags ico"></i> ক্যাটাগরি</a>
+          </div>
+        </details>
+
+        <details class="menu-group">
+          <summary><i class="fas fa-cart-shopping ico"></i> অর্ডার <i class="fas fa-chevron-down chev"></i></summary>
+          <div class="submenu">
+            <a href="order_management.html"><i class="fas fa-receipt ico"></i> সব অর্ডার</a>
+            <a href="order_management.html?tab=pending"><i class="fas fa-clock ico"></i> পেন্ডিং অর্ডার</a>
+            <a href="order_management.html?tab=delivered"><i class="fas fa-truck-fast ico"></i> ডেলিভারড</a>
+            <a href="order_management.html?tab=cancelled"><i class="fas fa-ban ico"></i> ক্যান্সেলড</a>
+          </div>
+        </details>
+
+        <a class="menu-item active" href="customers.html">
+          <i class="fas fa-users ico"></i> কাস্টমার
+        </a>
+         <a class="menu-item" href="password-hash-tool.html" onclick="goto(this,'পাসওয়ার্ড হ্যাশ টুল')">
+          <i class="fas fa-lock"></i> পাসওয়ার্ড হ্যাশ টুল
+        </a>
+        <a class="menu-item" href="#">
+          <i class="fas fa-images ico"></i> ব্যানার / স্লাইডার
+        </a>
+
+        <a class="menu-item" href="#">
+          <i class="fas fa-percent ico"></i> কুপন / অফার
+        </a>
+
+        <details class="menu-group">
+          <summary><i class="fas fa-file-lines ico"></i> পেজ ম্যানেজমেন্ট <i class="fas fa-chevron-down chev"></i></summary>
+          <div class="submenu">
+            <a href="#"><i class="fas fa-circle-info ico"></i> About Us</a>
+            <a href="#"><i class="fas fa-shield-halved ico"></i> Privacy Policy</a>
+            <a href="#"><i class="fas fa-file-contract ico"></i> Terms & Conditions</a>
+            <a href="#"><i class="fas fa-address-book ico"></i> যোগাযোগ</a>
+          </div>
+        </details>
+
+        <a class="menu-item" href="admin-panel.html">
+          <i class="fas fa-chart-line ico"></i> রিপোর্ট / অ্যানালিটিক্স
+        </a>
+
+        <details class="menu-group">
+          <summary><i class="fas fa-gear ico"></i> সেটিংস <i class="fas fa-chevron-down chev"></i></summary>
+          <div class="submenu">
+            <a href="#"><i class="fas fa-shop ico"></i> স্টোর সেটিংস</a>
+            <a href="#"><i class="fas fa-user-shield ico"></i> অ্যাডমিন ইউজার</a>
+            <a href="#"><i class="fas fa-credit-card ico"></i> পেমেন্ট মেথড</a>
+            <a href="#"><i class="fas fa-motorcycle ico"></i> ডেলিভারি চার্জ</a>
+          </div>
+        </details>
+      </nav>
+
+      <div class="side-foot">Ideas SHOP &copy; <span id="yr"></span></div>
+    </aside>
+
+    <div id="overlay" onclick="closeSidebar()"></div>
+
+    <!-- ===== MAIN AREA ===== -->
+    <div id="mainArea">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="menuToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+          <h1>কাস্টমার তালিকা</h1>
+        </div>
+        <button id="logoutBtn" onclick="logout()"><i class="fas fa-right-from-bracket"></i> লগআউট</button>
+      </header>
+
+      <div class="wrap">
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="num" id="statTotal">--</div>
+            <div class="lbl">মোট কাস্টমার</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="num" id="statNewMonth">--</div>
+            <div class="lbl">এই মাসে নতুন</div>
+          </div>
+          <div class="stat-card green">
+            <div class="num" id="statWithOrders">--</div>
+            <div class="lbl">অর্ডারকৃত কাস্টমার</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="toolbar">
+            <div class="search-box">
+              <i class="fas fa-magnifying-glass"></i>
+              <input type="text" id="searchInput" placeholder="নাম বা মোবাইল নম্বর দিয়ে খুঁজুন...">
+            </div>
+            <button class="refresh-btn" onclick="loadCustomers()"><i class="fas fa-rotate"></i> রিফ্রেশ</button>
+          </div>
+
+          <div class="clist" id="clist">
+            <div class="loading">লোড হচ্ছে...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+// ============ কনফিগ ============
+// নিচে আপনার Apps Script Web App URL বসান (Deploy > Manage deployments থেকে কপি করুন)
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzB3yuHtke1yG459A0OekLVElRRFy7gnVakaK_5kfSzm6lPtr2VJ0hovZyDiQmiVkfpHw/exec";
+
+// ============ লগইন (admin-panel.html এর সাথে একই সেশন শেয়ার করে) ============
+function login() {
+  const pass = document.getElementById('passInput').value.trim();
+  if (!pass) return;
+  sessionStorage.setItem('tashura_admin_pass', pass);
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  loadCustomers();
+}
+function logout() {
+  sessionStorage.removeItem('tashura_admin_pass');
+  location.reload();
+}
+window.onload = () => {
+  if (sessionStorage.getItem('tashura_admin_pass')) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    loadCustomers();
+  }
+};
+
+// ============ সাইডবার (মোবাইল) ============
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ============ টোস্ট ============
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ============ কাস্টমার লোড ============
+let allCustomers = [];
+
+async function loadCustomers() {
+  const box = document.getElementById('clist');
+  box.innerHTML = '<div class="loading">লোড হচ্ছে...</div>';
+
+  if (!GAS_URL || GAS_URL.indexOf('YOUR_APPS_SCRIPT') === 0) {
+    box.innerHTML = '<div class="empty">⚠️ GAS_URL সেট করা হয়নি। কোডের উপরে আপনার Apps Script Web App URL বসান।</div>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${GAS_URL}?action=getCustomers`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'লোড ব্যর্থ হয়েছে');
+    allCustomers = data.customers || [];
+    renderStats();
+    renderList(allCustomers);
+  } catch (err) {
+    box.innerHTML = `<div class="empty">❌ লোড করা যায়নি: ${err.message}</div>`;
+  }
+}
+
+function renderStats() {
+  document.getElementById('statTotal').textContent = allCustomers.length;
+
+  const now = new Date();
+  const thisMonth = allCustomers.filter(c => {
+    if (!c.timestamp) return false;
+    const d = new Date(c.timestamp);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).length;
+  document.getElementById('statNewMonth').textContent = thisMonth;
+
+  const withOrders = allCustomers.filter(c => c.totalOrders > 0).length;
+  document.getElementById('statWithOrders').textContent = withOrders;
+}
+
+function initials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+
+function statusBadgeClass(status) {
+  const s = (status || '').toLowerCase();
+  if (s.indexOf('deliver') > -1) return 'delivered';
+  if (s.indexOf('cancel') > -1) return 'cancelled';
+  return 'pending';
+}
+
+function countByStatus(orders, kind) {
+  return orders.filter(o => statusBadgeClass(o.status) === kind).length;
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function renderList(customers) {
+  const box = document.getElementById('clist');
+  if (!customers.length) {
+    box.innerHTML = '<div class="empty">কোনো কাস্টমার পাওয়া যায়নি</div>';
+    return;
+  }
+
+  box.innerHTML = customers.map((c, idx) => {
+    const delivered = countByStatus(c.orders, 'delivered');
+    const pending = countByStatus(c.orders, 'pending');
+    const cancelled = countByStatus(c.orders, 'cancelled');
+    const waPhone = '88' + c.phone;
+
+    const ordersHtml = c.orders.length
+      ? c.orders.map(o => `
+          <div class="order-row">
+            <span class="order-id">${o.id}</span>
+            <span class="badge ${statusBadgeClass(o.status)}">${o.status || 'N/A'}</span>
+          </div>
+        `).join('')
+      : '<div class="no-orders">এখনো কোনো অর্ডার করেননি</div>';
+
+    return `
+      <div class="citem" id="citem-${idx}">
+        <div class="citem-head" onclick="toggleItem(${idx})">
+          <div class="avatar">${initials(c.name)}</div>
+          <div class="cinfo">
+            <div class="cname">${c.name || 'নাম নেই'}</div>
+            <div class="cphone">${c.phone}</div>
+          </div>
+          <div class="cmeta">
+            <span class="badge orders">${c.totalOrders} অর্ডার</span>
+            ${delivered ? `<span class="badge delivered">${delivered} ডেলিভারড</span>` : ''}
+            ${pending ? `<span class="badge pending">${pending} পেন্ডিং</span>` : ''}
+            ${cancelled ? `<span class="badge cancelled">${cancelled} ক্যান্সেল</span>` : ''}
+            <a class="icon-btn call" href="tel:${c.phone}" onclick="event.stopPropagation()" title="কল করুন"><i class="fas fa-phone"></i></a>
+            <a class="icon-btn wa" href="https://wa.me/${waPhone}" target="_blank" onclick="event.stopPropagation()" title="হোয়াটসঅ্যাপ"><i class="fab fa-whatsapp"></i></a>
+            <i class="fas fa-chevron-down chev-toggle"></i>
+          </div>
+        </div>
+        <div class="citem-body">
+          <div class="reg-date"><i class="fas fa-calendar"></i> রেজিস্ট্রেশন: ${formatDate(c.timestamp)}</div>
+          ${ordersHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleItem(idx) {
+  document.getElementById(`citem-${idx}`).classList.toggle('open');
+}
+
+// ============ সার্চ ============
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  if (!q) { renderList(allCustomers); return; }
+  const filtered = allCustomers.filter(c =>
+    (c.name || '').toLowerCase().includes(q) || (c.phone || '').includes(q)
+  );
+  renderList(filtered);
+});
+</script>
+</body>
+</html>

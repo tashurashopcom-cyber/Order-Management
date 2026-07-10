@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ideas SHOP Admin Panel</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{
+    --red:#c8102e; --navy:#0b1d3a; --navy2:#122a52; --blue:#1e4d8b;
+    --bg:#f4f6f9; --card:#ffffff; --border:#e2e6ec; --text:#1a2230; --muted:#6b7688;
+    --sidebar-w:250px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg);color:var(--text);}
+  a{text-decoration:none;color:inherit;}
+
+  /* ===== Login ===== */
+  #loginScreen{max-width:360px;margin:80px auto;background:var(--card);padding:28px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08);text-align:center;}
+  #loginScreen i{font-size:34px;color:var(--red);margin-bottom:10px;}
+  #loginScreen input{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;margin:12px 0;}
+  #loginScreen button{width:100%;background:var(--red);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;}
+  #loginError{color:var(--red);font-size:13px;min-height:18px;}
+
+  /* ===== App shell ===== */
+  #appScreen{display:none;min-height:100vh;}
+  .shell{display:flex;min-height:100vh;}
+
+  /* Sidebar */
+  #sidebar{
+    width:var(--sidebar-w);flex-shrink:0;background:var(--navy);color:#fff;
+    position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:30;
+    transition:transform .25s ease;
+  }
+  .side-brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+  .side-brand .logo{width:36px;height:36px;border-radius:8px;background:var(--red);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+  .side-brand div b{display:block;font-size:14px;}
+  .side-brand div span{display:block;font-size:11px;color:#9fb0cc;}
+
+  nav.menu{padding:10px 8px 24px;}
+  .menu-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;font-size:13.5px;color:#d7dfee;cursor:pointer;margin-bottom:2px;}
+  .menu-item i.ico{width:18px;text-align:center;color:#8fa3c8;font-size:14px;}
+  .menu-item:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .menu-item.active{background:var(--red);color:#fff;}
+  .menu-item.active i.ico{color:#fff;}
+
+  details.menu-group{margin-bottom:2px;}
+  details.menu-group>summary{
+    list-style:none;display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;
+    font-size:13.5px;color:#d7dfee;cursor:pointer;
+  }
+  details.menu-group>summary::-webkit-details-marker{display:none;}
+  details.menu-group>summary:hover{background:rgba(255,255,255,.06);color:#fff;}
+  details.menu-group>summary i.ico{width:18px;text-align:center;color:#8fa3c8;font-size:14px;}
+  details.menu-group>summary i.chev{margin-left:auto;font-size:11px;transition:transform .2s;color:#8fa3c8;}
+  details.menu-group[open]>summary i.chev{transform:rotate(180deg);}
+  .submenu{padding:2px 0 6px 40px;display:flex;flex-direction:column;}
+  .submenu a, .submenu .menu-item{padding:8px 10px;font-size:13px;color:#b9c6de;border-radius:6px;}
+  .submenu a:hover{background:rgba(255,255,255,.06);color:#fff;}
+  .submenu a.active{color:#fff;font-weight:700;}
+
+  .side-foot{padding:14px 16px;font-size:11px;color:#7c8db3;border-top:1px solid rgba(255,255,255,.08);margin-top:6px;}
+
+  /* Main area */
+  #mainArea{flex:1;margin-left:var(--sidebar-w);min-width:0;}
+  header.topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+  header.topbar h1{font-size:17px;margin:0;color:var(--navy);}
+  #menuToggle{display:none;background:none;border:none;font-size:18px;color:var(--navy);cursor:pointer;margin-right:10px;}
+  .topbar-left{display:flex;align-items:center;}
+  #logoutBtn{background:var(--red);color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;}
+
+  .wrap{max-width:960px;margin:0 auto;padding:18px;}
+
+  /* Dashboard home */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px;}
+  .stat-card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.05);border-left:4px solid var(--red);}
+  .stat-card .num{font-size:24px;font-weight:800;color:var(--navy);}
+  .stat-card .lbl{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .stat-card.blue{border-left-color:var(--blue);}
+
+  .quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;}
+  .quick-card{background:var(--card);border-radius:12px;padding:16px 12px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.05);border:1px solid var(--border);cursor:pointer;}
+  .quick-card:hover{border-color:var(--red);}
+  .quick-card i{font-size:20px;color:var(--red);margin-bottom:8px;display:block;}
+  .quick-card span{font-size:12.5px;font-weight:600;color:var(--text);}
+
+  .welcome-card{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:14px;padding:22px;margin-bottom:20px;}
+  .welcome-card h2{margin:0 0 4px;font-size:19px;}
+  .welcome-card p{margin:0;color:#c3cee5;font-size:13px;}
+
+  .section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:22px 0 10px;}
+
+  /* placeholder page */
+  .placeholder-card{background:var(--card);border-radius:12px;padding:40px 24px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.05);}
+  .placeholder-card i{font-size:32px;color:var(--border);margin-bottom:12px;display:block;}
+  .placeholder-card h3{color:var(--navy);margin:0 0 6px;}
+  .placeholder-card p{color:var(--muted);font-size:13.5px;max-width:420px;margin:0 auto;}
+
+  .report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:16px 0 18px;}
+  .report-list{display:grid;gap:10px;}
+  .report-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fafbfc;}
+  .report-item .label{font-size:13px;color:var(--muted);} 
+  .report-item .value{font-size:15px;font-weight:700;color:var(--navy);} 
+
+  .tabs{display:flex;gap:8px;margin:0 0 16px;}
+  .tab-btn{flex:1;padding:12px;border-radius:8px;border:2px solid var(--border);background:#fff;font-weight:700;cursor:pointer;color:var(--muted);}
+  .tab-btn.active{border-color:var(--red);color:var(--red);background:#fdecee;}
+
+  .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:16px;}
+  .card h3{margin-top:0;color:var(--navy);border-bottom:2px solid var(--border);padding-bottom:8px;}
+
+  label{display:block;font-weight:600;font-size:13px;color:#555;margin:10px 0 4px;}
+  input,textarea,select{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
+  textarea{min-height:70px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  .btn{background:var(--red);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:700;cursor:pointer;width:100%;margin-top:14px;font-size:15px;}
+  .btn.secondary{background:var(--blue);}
+  .btn.small{width:auto;padding:6px 12px;font-size:12px;margin:0;}
+
+  .img-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .img-list .thumb{position:relative;width:60px;height:60px;border-radius:6px;overflow:hidden;border:1px solid var(--border);}
+  .img-list img{width:100%;height:100%;object-fit:cover;}
+  .img-list .rm{position:absolute;top:0;right:0;background:rgba(200,16,46,.9);color:#fff;border:none;width:18px;height:18px;font-size:10px;cursor:pointer;}
+
+  .type-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;}
+  .type-row input[type=text]{flex:1;}
+  .type-row input[type=color]{width:40px;height:38px;padding:2px;flex-shrink:0;}
+  .type-row button{background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;}
+
+  .plist{display:flex;flex-direction:column;gap:10px;}
+  .pitem{display:flex;gap:12px;padding:10px;border:1px solid var(--border);border-radius:10px;align-items:center;background:#fff;}
+  .pitem img{width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#eee;}
+  .pinfo{flex:1;min-width:0;}
+  .pinfo .ptitle{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pinfo .pmeta{font-size:12px;color:var(--muted);}
+  .pinfo .pmeta b{color:var(--red);}
+  .pactions{display:flex;gap:6px;flex-shrink:0;}
+  .pactions button{border:none;border-radius:6px;padding:8px 10px;cursor:pointer;font-size:13px;}
+  .btn-edit{background:#eef0fb;color:var(--blue);}
+  .btn-del{background:#fdecee;color:var(--red);}
+
+  .quick-edit{display:flex;gap:6px;margin-top:6px;}
+  .quick-edit input{padding:6px;font-size:12px;}
+  .quick-edit button{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;}
+
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:100;max-width:90%;text-align:center;}
+  #toast.show{opacity:1;}
+  #toast.error{background:var(--red);}
+  #toast.success{background:#2e7d32;}
+
+  .empty{text-align:center;color:var(--muted);padding:30px;}
+  .loading{text-align:center;color:var(--muted);padding:20px;}
+
+  #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:25;}
+
+  @media(max-width:880px){
+    #sidebar{transform:translateX(-100%);}
+    #sidebar.open{transform:translateX(0);}
+    #mainArea{margin-left:0;}
+    #menuToggle{display:inline-block;}
+    #overlay.show{display:block;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <i class="fas fa-lock"></i>
+  <h2 style="margin:0 0 4px;color:var(--navy);">Ideas SHOP Admin</h2>
+  <p style="color:var(--muted);font-size:13px;margin:0;">পাসওয়ার্ড দিয়ে লগইন করুন</p>
+  <input type="password" id="passInput" placeholder="পাসওয়ার্ড">
+  <button onclick="login()">লগইন করুন</button>
+  <div id="loginError"></div>
+</div>
+
+<div id="appScreen">
+  <div class="shell">
+
+    <!-- ===== SIDEBAR (ড্রপডাউন মেনু) ===== -->
+    <aside id="sidebar">
+      <div class="side-brand">
+        <div class="logo">IS</div>
+        <div>
+          <b>Ideas SHOP</b>
+          <span>Admin CMS</span>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <div class="menu-item" data-view="dashboard" onclick="goto('dashboard', this)">
+          <i class="fas fa-gauge-high ico"></i> ড্যাশবোর্ড
+        </div>
+
+        <details class="menu-group" open>
+          <summary><i class="fas fa-box ico"></i> প্রোডাক্টস <i class="fas fa-chevron-down chev"></i></summary>
+          <div class="submenu">
+            <a class="menu-item" data-view="add" onclick="goto('add', this)"><i class="fas fa-plus ico"></i> প্রোডাক্ট যোগ করুন</a>
+            <a class="menu-item" data-view="list" onclick="goto('list', this)"><i class="fas fa-list ico"></i> সব প্রোডাক্ট</a>
+            <!-- ফাইল লিংক এখানে বসান: categories.html -->
+            <a href="#" onclick="return placeholder(this,'ক্যাটাগরি ম্যানেজমেন্ট')"><i class="fas fa-tags ico"></i> ক্যাটাগরি</a>
+          </div>
+        </details>
+
+        <details class="menu-group">
+          <summary><i class="fas fa-cart-shopping ico"></i> অর্ডার <i class="fas fa-chevron-down chev"></i></summary>
+          <div class="submenu">
+            <a href="order_management.html" onclick="closeSidebar()"><i class="fas fa-receipt ico"></i> সব অর্ডার</a>
+            <a href="order_management.html?tab=pending" onclick="closeSidebar()"><i class="fas fa-clock ico"></i> পেন্ডিং অর্ডার</a>
+            <a href="order_management.html?tab=delivered" onclick="closeSidebar()"><i class="fas fa-truck-fast ico"></i> ডেলিভারড</a>
+            <a href="order_management.html?tab=cancelled" onclick="closeSidebar()"><i class="fas fa-ban ico"></i> ক্যান্সেলড</a>
+          </div>
+        </details>
+
+        <!-- ফাইল লিংক: customers.html -->
+        <a class="menu-item" href="customers.html" onclick="goto(this,'কাস্টমার তালিকা')">
+          <i class="fas fa-users ico"></i> কাস্টমার
+        </a>
+          <a class="menu-item" href="password-hash-tool.html" onclick="goto(this,'পাসওয়ার্ড হ্যাশ টুল')">
+          <i class="fas fa-lock"></i> পাসওয়ার্ড হ্যাশ টুল
+        </a>
+        <a class="menu-item" href="banners.html">
+          <i class="fas fa-images ico"></i> ব্যানার / স্লাইডার
+        </a>
+
+        <!-- ফাইল লিংক: coupons.html -->
+        <a class="menu-item" href="#" onclick="return placeholder(this,'কুপন / অফার')">
+          <i class="fas fa-percent ico"></i> কুপন / অফার
+        </a>
+
+        <details class="menu-group">
+          <summary><i class="fas fa-file-lines ico"></i> পেজ ম্যানেজমেন্ট <i class="fas fa-chevron-down chev"></i></summary>
+          <div class="submenu">
+            <a href="#" onclick="return placeholder(this,'About Us পেজ')"><i class="fas fa-circle-info ico"></i> About Us</a>
+            <a href="#" onclick="return placeholder(this,'Privacy Policy পেজ')"><i class="fas fa-shield-halved ico"></i> Privacy Policy</a>
+            <a href="#" onclick="return placeholder(this,'Terms & Conditions পেজ')"><i class="fas fa-file-contract ico"></i> Terms & Conditions</a>
+            <a href="#" onclick="return placeholder(this,'যোগাযোগ পেজ')"><i class="fas fa-address-book ico"></i> যোগাযোগ</a>
+          </div>
+        </details>
+
+        <a class="menu-item" href="#" onclick="goto('reports', this); return false;">
+          <i class="fas fa-chart-line ico"></i> রিপোর্ট / অ্যানালিটিক্স
+        </a>
+
+        <details class="menu-group">
+          <summary><i class="fas fa-gear ico"></i> সেটিংস <i class="fas fa-chevron-down chev"></i></summary>
+          <div class="submenu">
+            <a href="#" onclick="return placeholder(this,'স্টোর সেটিংস')"><i class="fas fa-shop ico"></i> স্টোর সেটিংস</a>
+            <a href="#" onclick="return placeholder(this,'অ্যাডমিন ইউজার')"><i class="fas fa-user-shield ico"></i> অ্যাডমিন ইউজার</a>
+            <a href="#" onclick="return placeholder(this,'পেমেন্ট মেথড')"><i class="fas fa-credit-card ico"></i> পেমেন্ট মেথড</a>
+            <a href="#" onclick="return placeholder(this,'ডেলিভারি চার্জ')"><i class="fas fa-motorcycle ico"></i> ডেলিভারি চার্জ</a>
+          </div>
+        </details>
+      </nav>
+
+      <div class="side-foot">Ideas SHOP &copy; <span id="yr"></span></div>
+    </aside>
+
+    <div id="overlay" onclick="closeSidebar()"></div>
+
+    <!-- ===== MAIN AREA ===== -->
+    <div id="mainArea">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="menuToggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+          <h1 id="pageTitle">ড্যাশবোর্ড</h1>
+        </div>
+        <button id="logoutBtn" onclick="logout()"><i class="fas fa-right-from-bracket"></i> লগআউট</button>
+      </header>
+
+      <div class="wrap">
+
+        <!-- ===== DASHBOARD HOME ===== -->
+        <div id="view-dashboard">
+          <div class="welcome-card">
+            <h2>স্বাগতম, Ideas SHOP 👋</h2>
+            <p>এখান থেকে আপনার প্রোডাক্ট, অর্ডার এবং স্টোরের সবকিছু নিয়ন্ত্রণ করুন।</p>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="num" id="statProducts">--</div>
+              <div class="lbl">মোট প্রোডাক্ট</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="num" id="statStock">--</div>
+              <div class="lbl">মোট স্টক</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="statOutOfStock">--</div>
+              <div class="lbl">স্টক শেষ</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="num" id="statCategories">--</div>
+              <div class="lbl">ক্যাটাগরি সংখ্যা</div>
+            </div>
+          </div>
+
+          <div class="section-title">দ্রুত অ্যাকশন</div>
+          <div class="quick-grid">
+            <div class="quick-card" onclick="goto('add')"><i class="fas fa-plus"></i><span>প্রোডাক্ট যোগ করুন</span></div>
+            <div class="quick-card" onclick="goto('list')"><i class="fas fa-boxes"></i><span>সব প্রোডাক্ট দেখুন</span></div>
+            <div class="quick-card" onclick="window.location.href='order_management.html'"><i class="fas fa-receipt"></i><span>অর্ডার দেখুন</span></div>
+            <div class="quick-card" onclick="window.location.href='banners.html'"><i class="fas fa-images"></i><span>ব্যানার আপডেট</span></div>
+          </div>
+        </div>
+
+
+        <!-- ===== REPORTS VIEW ===== -->
+        <div id="view-reports" style="display:none;">
+          <div class="welcome-card">
+            <h2>অর্ডার রিপোর্ট</h2>
+            <p>ডেলিভারড, ক্যান্সেলড, আয় এবং লোকসানের সারাংশ এখানে দেখা যাবে।</p>
+          </div>
+
+          <div class="report-grid">
+            <div class="stat-card">
+              <div class="num" id="reportDeliveredCount">--</div>
+              <div class="lbl">ডেলিভারড অর্ডার</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="num" id="reportCancelledCount">--</div>
+              <div class="lbl">ক্যান্সেলড অর্ডার</div>
+            </div>
+            <div class="stat-card">
+              <div class="num" id="reportReceivedAmount">--</div>
+              <div class="lbl">ডেলিভারড থেকে আয়</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="num" id="reportLossAmount">--</div>
+              <div class="lbl">ক্যান্সেলড থেকে লোকসান</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3><i class="fas fa-chart-line"></i> সারাংশ</h3>
+            <div id="reportMessage" class="loading">রিপোর্ট লোড হচ্ছে...</div>
+            <div id="reportSummary" class="report-list" style="display:none;"></div>
+          </div>
+        </div>
+
+        <!-- ===== ADD / EDIT FORM (প্রোডাক্টস) ===== -->
+        <div id="view-add" style="display:none;">
+          <div class="tabs">
+            <button class="tab-btn active" id="tabAdd" onclick="switchTab('add')"><i class="fas fa-plus"></i> Add</button>
+            <button class="tab-btn" id="tabList" onclick="switchTab('list')"><i class="fas fa-list"></i> Products</button>
+          </div>
+
+          <div class="card" id="formPanel">
+            <h3 id="formTitle"><i class="fas fa-box"></i> নতুন প্রোডাক্ট যোগ করুন</h3>
+            <form id="productForm">
+              <label>প্রোডাক্ট কোড <span style="color:red;">*</span> (এডিট করার সময় বদলাবেন না)</label>
+              <input type="text" id="fCode" required placeholder="যেমন: F-fan-03">
+
+              <label>প্রোডাক্ট নাম <span style="color:red;">*</span></label>
+              <input type="text" id="fTitle" required>
+
+              <div class="row2">
+                <div>
+                  <label>দাম <span style="color:red;">*</span></label>
+                  <input type="text" id="fPrice" required placeholder="৳৪৯৯">
+                </div>
+                <div>
+                  <label>স্টক (সংখ্যা)</label>
+                  <input type="number" id="fStock" value="100">
+                </div>
+              </div>
+
+              <div class="row2">
+                <div>
+                  <label>ক্যাটাগরি</label>
+                  <select id="fCategory">
+                    <option value="">-- নির্বাচন করুন --</option>
+                    <option value="gents">Gents</option>
+                    <option value="ladies">Ladies</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="watch">Watch</option>
+                    <option value="decor">Decor</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Store ID</label>
+                  <input type="text" id="fStoreId" value="store1">
+                </div>
+              </div>
+
+              <label>বিবরণ</label>
+              <textarea id="fDesc"></textarea>
+
+              <label>স্পেসিফিকেশন (কমা দিয়ে আলাদা করুন)</label>
+              <textarea id="fSpecs" placeholder="Brand: XX, Power: 5W, ..."></textarea>
+
+              <label>ছবির লিংক যোগ করুন</label>
+              <input type="text" id="imgUrlInput" placeholder="https://...">
+              <button type="button" class="btn secondary" style="margin-top:6px;" onclick="addImage()"><i class="fas fa-plus"></i> ছবি যোগ করুন</button>
+              <div class="img-list" id="imgList"></div>
+
+              <label style="margin-top:14px;">প্রোডাক্ট টাইপ / রঙ (ঐচ্ছিক)</label>
+              <div id="typeContainer"></div>
+              <button type="button" class="btn secondary" style="margin-top:2px;" onclick="addTypeRow()"><i class="fas fa-plus"></i> টাইপ যোগ করুন</button>
+
+              <button type="submit" class="btn" id="submitBtn"><i class="fas fa-check"></i> প্রোডাক্ট সেভ করুন</button>
+              <button type="button" class="btn secondary" id="cancelEditBtn" style="display:none;" onclick="cancelEdit()">এডিট বাতিল করুন</button>
+            </form>
+          </div>
+
+          <div class="card" id="listPanel" style="display:none;">
+            <h3><i class="fas fa-boxes"></i> সব প্রোডাক্ট <span id="countBadge" style="color:var(--muted);font-size:13px;"></span></h3>
+            <div id="plist" class="plist"><div class="loading">লোড হচ্ছে...</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+// ============ কনফিগ ============
+const WORKER_URL = "https://tashurashop-worker.tashurashop-com.workers.dev/"; // যেমন: https://tashura-admin.yourname.workers.dev
+
+// ============ লগইন ============
+async function login() {
+  const pass = document.getElementById('passInput').value.trim();
+  const errBox = document.getElementById('loginError');
+  const btn = document.querySelector('#loginScreen button');
+  if (!pass) return;
+
+  errBox.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'যাচাই করা হচ্ছে...';
+
+  try {
+    const res = await fetch(`${WORKER_URL}/api/verify`, {
+      method: 'POST',
+      headers: { 'X-Admin-Password': pass }
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'ভুল পাসওয়ার্ড');
+    }
+
+    sessionStorage.setItem('tashura_admin_pass', pass);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    goto('dashboard');
+  } catch (err) {
+    errBox.textContent = '❌ ' + err.message;
+    document.getElementById('passInput').value = '';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'লগইন করুন';
+  }
+}
+function logout() {
+  sessionStorage.removeItem('tashura_admin_pass');
+  location.reload();
+}
+window.onload = () => {
+  if (sessionStorage.getItem('tashura_admin_pass')) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    goto('dashboard');
+  }
+};
+function getPass() { return sessionStorage.getItem('tashura_admin_pass') || ''; }
+
+// ============ সাইডবার (মোবাইল) ============
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ============ ভিউ নেভিগেশন ============
+const pageTitles = { dashboard: 'ড্যাশবোর্ড', add: 'প্রোডাক্টস', reports: 'রিপোর্ট / অ্যানালিটিক্স' };
+function goto(view, el) {
+  document.querySelectorAll('#view-dashboard, #view-placeholder, #view-add, #view-reports').forEach(v => v.style.display = 'none');
+  document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  if (view === 'dashboard') {
+    document.getElementById('view-dashboard').style.display = 'block';
+    refreshStats();
+  } else if (view === 'add' || view === 'list') {
+    document.getElementById('view-add').style.display = 'block';
+    switchTab(view);
+  } else if (view === 'reports') {
+    document.getElementById('view-reports').style.display = 'block';
+    loadOrderReport();
+  }
+  document.getElementById('pageTitle').textContent = pageTitles[view] || pageTitles.add;
+  closeSidebar();
+}
+// প্লেসহোল্ডার মেনু আইটেম (এখনো ফাইল লিংক করা হয়নি)
+function placeholder(el, label) {
+  document.querySelectorAll('#view-dashboard, #view-placeholder, #view-add, #view-reports').forEach(v => v.style.display = 'none');
+  document.querySelectorAll('.menu-item, .submenu a').forEach(m => m.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('placeholderTitle').textContent = label + ' — এই সেকশনটি এখনও লিংক করা হয়নি';
+  document.getElementById('view-placeholder').style.display = 'block';
+  document.getElementById('pageTitle').textContent = label;
+  closeSidebar();
+  return false;
+}
+
+// ============ ড্যাশবোর্ড স্ট্যাটস ============
+async function refreshStats() {
+  try {
+    const res = await fetch(`${WORKER_URL}/api/products`);
+    const data = await res.json();
+    if (!res.ok) throw new Error();
+    const products = data.products || [];
+    document.getElementById('statProducts').textContent = products.length;
+    document.getElementById('statStock').textContent = products.reduce((s, p) => s + (parseInt(p.stock) || 0), 0);
+    document.getElementById('statOutOfStock').textContent = products.filter(p => (parseInt(p.stock) || 0) === 0).length;
+    document.getElementById('statCategories').textContent = new Set(products.map(p => p.category).filter(Boolean)).size;
+  } catch (err) {
+    ['statProducts','statStock','statOutOfStock','statCategories'].forEach(id => document.getElementById(id).textContent = '-');
+  }
+}
+
+// ============ রিপোর্ট / অ্যানালিটিক্স ============
+const ORDER_GAS_API = "https://script.google.com/macros/s/AKfycbyFfHmGaRQ1BLsFWG2VQLojZHRcfRfkzql0utD5vc36nz4EscqfZjoAjKLAEJ31ZvkO/exec";
+const ORDER_AMOUNT_FIELDS = [
+  'Total', 'Amount', 'Subtotal', 'Grand Total', 'GrandTotal', 'Order Total', 'Total Amount', 'Payable', 'Net',
+  'Price', 'Total Price', 'Final Amount', 'Order Amount', 'Amount Payable', 'Net Amount', 'Payable Amount',
+  'GrandTotalAmount', 'Amt', 'Invoice Total', 'Order Price', 'Total Bill', 'Bill Amount'
+];
+
+function parseAmount(value) {
+  if (value === null || value === undefined || value === '') return 0;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const cleaned = value.replace(/[৳,\s]/g, '').trim();
+    const n = parseFloat(cleaned.replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+function getOrderAmount(order) {
+  for (const field of ORDER_AMOUNT_FIELDS) {
+    if (order[field] !== undefined && order[field] !== null && order[field] !== '') {
+      const amount = parseAmount(order[field]);
+      if (amount > 0) return amount;
+    }
+  }
+
+  const fallbackFields = Object.keys(order || {}).filter(key => /total|amount|price|payable|net|subtotal/i.test(key));
+  for (const key of fallbackFields) {
+    const amount = parseAmount(order[key]);
+    if (amount > 0) return amount;
+  }
+
+  return 0;
+}
+
+function normOrderStatus(status) {
+  return (status || '').toString().trim().toLowerCase();
+}
+
+function isDeliveredOrder(order) { return normOrderStatus(order.Status) === 'delivered'; }
+function isCancelledOrder(order) {
+  const s = normOrderStatus(order.Status);
+  return s === 'canceled' || s === 'cancelled';
+}
+function isPendingOrder(order) { return !isDeliveredOrder(order) && !isCancelledOrder(order); }
+
+function formatTk(value) {
+  return '৳' + Number(value || 0).toLocaleString('bn-BD');
+}
+
+async function loadOrderReport() {
+  const messageBox = document.getElementById('reportMessage');
+  const summaryBox = document.getElementById('reportSummary');
+  messageBox.style.display = 'block';
+  summaryBox.style.display = 'none';
+  messageBox.innerHTML = '<div class="loading">রিপোর্ট লোড হচ্ছে...</div>';
+
+  try {
+    const res = await fetch(ORDER_GAS_API);
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.message || 'রিপোর্ট লোড ব্যর্থ');
+
+    const orders = data.data || [];
+    const delivered = orders.filter(isDeliveredOrder);
+    const cancelled = orders.filter(isCancelledOrder);
+    const pending = orders.filter(isPendingOrder);
+
+    const deliveredRevenue = delivered.reduce((sum, order) => sum + getOrderAmount(order), 0);
+    const cancelledLoss = cancelled.reduce((sum, order) => sum + getOrderAmount(order), 0);
+
+    document.getElementById('reportDeliveredCount').textContent = delivered.length;
+    document.getElementById('reportCancelledCount').textContent = cancelled.length;
+    document.getElementById('reportReceivedAmount').textContent = formatTk(deliveredRevenue);
+    document.getElementById('reportLossAmount').textContent = formatTk(cancelledLoss);
+
+    summaryBox.innerHTML = `
+      <div class="report-item"><span class="label">পেন্ডিং</span><span class="value">${pending.length}টি</span></div>
+      <div class="report-item"><span class="label">ডেলিভারড</span><span class="value">${delivered.length}টি</span></div>
+      <div class="report-item"><span class="label">ক্যান্সেলড</span><span class="value">${cancelled.length}টি</span></div>
+      <div class="report-item"><span class="label">ডেলিভারড থেকে আয়</span><span class="value">${formatTk(deliveredRevenue)}</span></div>
+      <div class="report-item"><span class="label">ক্যান্সেলড থেকে লোকসান</span><span class="value">${formatTk(cancelledLoss)}</span></div>
+    `;
+    messageBox.style.display = 'none';
+    summaryBox.style.display = 'grid';
+  } catch (err) {
+    messageBox.innerHTML = `<div class="empty">রিপোর্ট লোড করা যায়নি। অর্ডার ডেটা বা GAS URL ঠিক আছে কিনা দেখুন।</div>`;
+  }
+}
+
+// ============ টোস্ট ============
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ============ ট্যাব (Add / List) ============
+function switchTab(tab) {
+  document.getElementById('tabAdd').classList.toggle('active', tab === 'add');
+  document.getElementById('tabList').classList.toggle('active', tab === 'list');
+  document.getElementById('formPanel').style.display = tab === 'add' ? 'block' : 'none';
+  document.getElementById('listPanel').style.display = tab === 'list' ? 'block' : 'none';
+  if (tab === 'list') loadProducts();
+}
+
+// ============ ইমেজ হ্যান্ডলিং ============
+let currentImages = [];
+function addImage() {
+  const input = document.getElementById('imgUrlInput');
+  const url = input.value.trim();
+  if (!url) return;
+  currentImages.push(url);
+  input.value = '';
+  renderImgList();
+}
+function removeImage(i) { currentImages.splice(i, 1); renderImgList(); }
+function renderImgList() {
+  const box = document.getElementById('imgList');
+  box.innerHTML = currentImages.map((u, i) => `
+    <div class="thumb"><img src="${u}" onerror="this.style.opacity=.2"><button class="rm" onclick="removeImage(${i})">×</button></div>
+  `).join('');
+}
+
+// ============ টাইপ/রঙ হ্যান্ডলিং ============
+function addTypeRow(name = '', hex = '#c8102e') {
+  const box = document.getElementById('typeContainer');
+  const row = document.createElement('div');
+  row.className = 'type-row';
+  row.innerHTML = `
+    <input type="text" class="type-name" value="${name}" placeholder="যেমন: কালো">
+    <input type="color" class="type-hex" value="${hex}">
+    <button type="button" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+  `;
+  box.appendChild(row);
+}
+
+// ============ ফর্ম রিসেট ============
+let editingCode = null;
+function resetForm() {
+  document.getElementById('productForm').reset();
+  document.getElementById('fStock').value = 100;
+  document.getElementById('fStoreId').value = 'store1';
+  currentImages = [];
+  renderImgList();
+  document.getElementById('typeContainer').innerHTML = '';
+  editingCode = null;
+  document.getElementById('fCode').disabled = false;
+  document.getElementById('formTitle').innerHTML = '<i class="fas fa-box"></i> নতুন প্রোডাক্ট যোগ করুন';
+  document.getElementById('submitBtn').innerHTML = '<i class="fas fa-check"></i> প্রোডাক্ট সেভ করুন';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+function cancelEdit() { resetForm(); switchTab('list'); }
+
+// ============ ফর্ম সাবমিট (Add / Edit দুটোই) ============
+document.getElementById('productForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  if (currentImages.length === 0) { showToast('অন্তত একটি ছবি যোগ করুন', 'error'); return; }
+
+  const specs = document.getElementById('fSpecs').value.split(',').map(s => s.trim()).filter(Boolean);
+  const types = Array.from(document.querySelectorAll('.type-row')).map(row => ({
+    name: row.querySelector('.type-name').value.trim(),
+    hex: row.querySelector('.type-hex').value
+  })).filter(t => t.name);
+
+  const product = {
+    code: document.getElementById('fCode').value.trim(),
+    title: document.getElementById('fTitle').value.trim(),
+    price: document.getElementById('fPrice').value.trim(),
+    stock: parseInt(document.getElementById('fStock').value) || 0,
+    category: document.getElementById('fCategory').value.trim(),
+    storeId: document.getElementById('fStoreId').value.trim(),
+    desc: document.getElementById('fDesc').value.trim(),
+    specs, types, images: currentImages
+  };
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'সেভ হচ্ছে...';
+
+  try {
+    let res;
+    if (editingCode) {
+      res = await fetch(`${WORKER_URL}/api/products/${encodeURIComponent(editingCode)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': getPass() },
+        body: JSON.stringify(product)
+      });
+    } else {
+      res = await fetch(`${WORKER_URL}/api/products`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': getPass() },
+        body: JSON.stringify(product)
+      });
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'অজানা সমস্যা');
+
+    showToast(editingCode ? '✅ প্রোডাক্ট আপডেট হয়েছে' : '✅ প্রোডাক্ট যোগ হয়েছে', 'success');
+    resetForm();
+    switchTab('list');
+  } catch (err) {
+    showToast('❌ ' + err.message, 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-check"></i> প্রোডাক্ট সেভ করুন';
+  }
+});
+
+// ============ প্রোডাক্ট লিস্ট লোড ============
+let allProducts = [];
+async function loadProducts() {
+  const box = document.getElementById('plist');
+  box.innerHTML = '<div class="loading">লোড হচ্ছে...</div>';
+  try {
+    const res = await fetch(`${WORKER_URL}/api/products`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'লোড ব্যর্থ হয়েছে');
+    allProducts = data.products;
+    renderList();
+  } catch (err) {
+    box.innerHTML = `<div class="empty">❌ লোড করা যায়নি: ${err.message}</div>`;
+  }
+}
+function renderList() {
+  const box = document.getElementById('plist');
+  document.getElementById('countBadge').textContent = `(${allProducts.length}টি)`;
+  if (!allProducts.length) { box.innerHTML = '<div class="empty">কোনো প্রোডাক্ট নেই</div>'; return; }
+
+  box.innerHTML = allProducts.map(p => `
+    <div class="pitem">
+      <img src="${(p.images && p.images[0]) || ''}" onerror="this.style.opacity=.2">
+      <div class="pinfo">
+        <div class="ptitle">${p.title}</div>
+        <div class="pmeta">কোড: ${p.code} &nbsp;|&nbsp; দাম: <b>${p.price}</b> &nbsp;|&nbsp; স্টক: ${p.stock ?? '-'}</div>
+        <div class="quick-edit">
+          <input type="text" id="qp-${cssSafe(p.code)}" value="${p.price}" style="width:70px;">
+          <input type="number" id="qs-${cssSafe(p.code)}" value="${p.stock ?? 0}" style="width:60px;">
+          <button onclick="quickUpdate('${escAttr(p.code)}')">আপডেট</button>
+        </div>
+      </div>
+      <div class="pactions">
+        <button class="btn-edit" onclick="editProduct('${escAttr(p.code)}')"><i class="fas fa-pen"></i></button>
+        <button class="btn-del" onclick="deleteProduct('${escAttr(p.code)}')"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+function cssSafe(s) { return s.replace(/[^a-zA-Z0-9]/g, '_'); }
+function escAttr(s) { return s.replace(/'/g, "\\'"); }
+
+// ============ কুইক প্রাইস/স্টক আপডেট ============
+async function quickUpdate(code) {
+  const price = document.getElementById(`qp-${cssSafe(code)}`).value.trim();
+  const stock = parseInt(document.getElementById(`qs-${cssSafe(code)}`).value) || 0;
+  try {
+    const res = await fetch(`${WORKER_URL}/api/products/${encodeURIComponent(code)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Password': getPass() },
+      body: JSON.stringify({ price, stock })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'আপডেট ব্যর্থ');
+    showToast('✅ দাম/স্টক আপডেট হয়েছে', 'success');
+    allProducts = data.products;
+    renderList();
+  } catch (err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+
+// ============ এডিট (ফর্মে লোড করা) ============
+function editProduct(code) {
+  const p = allProducts.find(x => x.code === code);
+  if (!p) return;
+  editingCode = code;
+  document.getElementById('fCode').value = p.code;
+  document.getElementById('fCode').disabled = true;
+  document.getElementById('fTitle').value = p.title || '';
+  document.getElementById('fPrice').value = p.price || '';
+  document.getElementById('fStock').value = p.stock ?? 100;
+  document.getElementById('fCategory').value = p.category || '';
+  document.getElementById('fStoreId').value = p.storeId || 'store1';
+  document.getElementById('fDesc').value = p.desc || '';
+  document.getElementById('fSpecs').value = (p.specs || []).join(', ');
+  currentImages = [...(p.images || [])];
+  renderImgList();
+  document.getElementById('typeContainer').innerHTML = '';
+  (p.types || []).forEach(t => addTypeRow(t.name, t.hex));
+
+  document.getElementById('formTitle').innerHTML = `<i class="fas fa-pen"></i> এডিট করুন: ${p.title}`;
+  document.getElementById('submitBtn').innerHTML = '<i class="fas fa-check"></i> আপডেট সেভ করুন';
+  document.getElementById('cancelEditBtn').style.display = 'block';
+  goto('add', document.querySelector('.menu-item[data-view="add"]'));
+  switchTab('add');
+}
+
+// ============ ডিলিট ============
+async function deleteProduct(code) {
+  if (!confirm(`আপনি কি "${code}" প্রোডাক্টটি ডিলিট করতে চান?`)) return;
+  try {
+    const res = await fetch(`${WORKER_URL}/api/products/${encodeURIComponent(code)}`, {
+      method: 'DELETE',
+      headers: { 'X-Admin-Password': getPass() }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'ডিলিট ব্যর্থ');
+    showToast('🗑️ প্রোডাক্ট ডিলিট হয়েছে', 'success');
+    allProducts = data.products;
+    renderList();
+  } catch (err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+</script>
+</body>
+</html>

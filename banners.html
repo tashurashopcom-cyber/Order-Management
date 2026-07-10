@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ব্যানার ম্যানেজমেন্ট — Ideas SHOP Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  :root{
+    --red:#c8102e; --navy:#0b1d3a; --navy2:#122a52; --blue:#1e4d8b;
+    --bg:#f4f6f9; --card:#ffffff; --border:#e2e6ec; --text:#1a2230; --muted:#6b7688;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg);color:var(--text);}
+  a{text-decoration:none;color:inherit;}
+
+  /* ===== Login (admin-panel.html এর সাথে একই স্টাইল) ===== */
+  #loginScreen{max-width:360px;margin:80px auto;background:var(--card);padding:28px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.08);text-align:center;}
+  #loginScreen i{font-size:34px;color:var(--red);margin-bottom:10px;}
+  #loginScreen input{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;margin:12px 0;}
+  #loginScreen button{width:100%;background:var(--red);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;}
+  #loginError{color:var(--red);font-size:13px;min-height:18px;}
+
+  #appScreen{display:none;}
+  header.topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+  .topbar-left{display:flex;align-items:center;gap:12px;}
+  #backBtn{background:none;border:none;font-size:18px;color:var(--navy);cursor:pointer;}
+  header.topbar h1{font-size:17px;margin:0;color:var(--navy);}
+  #logoutBtn{background:var(--red);color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;}
+
+  .wrap{max-width:760px;margin:0 auto;padding:18px;}
+
+  .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:16px;}
+  .card h3{margin-top:0;color:var(--navy);border-bottom:2px solid var(--border);padding-bottom:8px;font-size:15px;}
+
+  label{display:block;font-weight:600;font-size:13px;color:#555;margin:10px 0 4px;}
+  input{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
+
+  .img-add-row{display:flex;gap:8px;}
+  .img-add-row input{flex:1;}
+  .img-add-row button{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:0 16px;cursor:pointer;font-size:13px;}
+
+  .preview{margin-top:10px;width:100%;max-height:150px;border-radius:8px;overflow:hidden;border:1px solid var(--border);display:none;background:#fafbfc;}
+  .preview img{width:100%;max-height:150px;object-fit:cover;display:block;}
+
+  .chk-row{display:flex;align-items:center;gap:8px;margin-top:12px;}
+  .chk-row input{width:auto;}
+  .chk-row label{margin:0;}
+
+  .btn{background:var(--red);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:700;cursor:pointer;width:100%;margin-top:14px;font-size:15px;}
+  .btn.secondary{background:var(--blue);margin-top:8px;}
+
+  .blist{display:flex;flex-direction:column;gap:10px;}
+  .bitem{display:flex;gap:12px;padding:10px;border:1px solid var(--border);border-radius:10px;align-items:center;background:#fff;}
+  .bitem.inactive{opacity:.5;}
+  .bitem img{width:80px;height:50px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#eee;}
+  .binfo{flex:1;min-width:0;}
+  .binfo .blink{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .binfo .border-no{font-size:11.5px;color:var(--blue);font-weight:700;}
+  .bordercol{display:flex;flex-direction:column;gap:2px;}
+  .bactions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+  .bactions .row{display:flex;gap:4px;}
+  .bactions button{border:none;border-radius:6px;padding:7px 9px;cursor:pointer;font-size:12px;}
+  .btn-up,.btn-down{background:#eef0fb;color:var(--blue);}
+  .btn-edit{background:#eef0fb;color:var(--blue);}
+  .btn-del{background:#fdecee;color:var(--red);}
+  .btn-toggle{background:#eafaf0;color:#2e7d32;}
+  .btn-toggle.off{background:#f4f4f4;color:var(--muted);}
+
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:100;max-width:90%;text-align:center;}
+  #toast.show{opacity:1;}
+  #toast.error{background:var(--red);}
+  #toast.success{background:#2e7d32;}
+
+  .empty,.loading{text-align:center;color:var(--muted);padding:30px;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <i class="fas fa-lock"></i>
+  <h2>অ্যাডমিন লগইন</h2>
+  <input type="password" id="passInput" placeholder="পাসওয়ার্ড দিন" onkeypress="if(event.key==='Enter')login()">
+  <button onclick="login()">লগইন করুন</button>
+  <div id="loginError"></div>
+</div>
+
+<div id="appScreen">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button id="backBtn" onclick="location.href='admin-panel.html'"><i class="fas fa-arrow-right-from-bracket fa-flip-horizontal"></i></button>
+      <h1><i class="fas fa-images"></i> ব্যানার / স্লাইডার</h1>
+    </div>
+    <button id="logoutBtn" onclick="logout()">লগআউট</button>
+  </header>
+
+  <div class="wrap">
+    <div class="card">
+      <h3 id="formTitle"><i class="fas fa-plus"></i> নতুন ব্যানার যোগ করুন</h3>
+
+      <label>ব্যানার ইমেজ URL</label>
+      <div class="img-add-row">
+        <input type="text" id="fImage" placeholder="https://res.cloudinary.com/..." oninput="updatePreview()">
+      </div>
+      <div class="preview" id="previewBox"><img id="previewImg" src="" onerror="this.parentElement.style.display='none'"></div>
+
+      <label>লিংক (ক্লিক করলে কোথায় যাবে — ঐচ্ছিক)</label>
+      <input type="text" id="fLink" placeholder="যেমন: product.html?code=P001 অথবা category.html?cat=Watch">
+
+      <div class="chk-row">
+        <input type="checkbox" id="fActive" checked>
+        <label for="fActive" style="margin:0;">এখনই সাইটে সক্রিয় (Active) থাকবে</label>
+      </div>
+
+      <button class="btn" id="submitBtn" onclick="saveBanner()"><i class="fas fa-check"></i> ব্যানার সেভ করুন</button>
+      <button class="btn secondary" id="cancelEditBtn" style="display:none;" onclick="resetForm()">বাতিল করুন</button>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-list"></i> সব ব্যানার <span id="countBadge"></span></h3>
+      <div class="blist" id="blist"><div class="loading">লোড হচ্ছে...</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const WORKER_URL = "https://tashura-shop.tashurashop-com.workers.dev/";
+
+// ============ লগইন (admin-panel.html এর সাথে একই সেশন শেয়ার করে) ============
+function getPass() { return sessionStorage.getItem('tashura_admin_pass') || ''; }
+
+async function login() {
+  const pass = document.getElementById('passInput').value.trim();
+  const errBox = document.getElementById('loginError');
+  const btn = document.querySelector('#loginScreen button');
+  if (!pass) return;
+
+  errBox.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'যাচাই করা হচ্ছে...';
+
+  try {
+    const res = await fetch(`${WORKER_URL}/api/verify`, {
+      method: 'POST',
+      headers: { 'X-Admin-Password': pass }
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'ভুল পাসওয়ার্ড');
+    }
+    sessionStorage.setItem('tashura_admin_pass', pass);
+    enterApp();
+  } catch (err) {
+    errBox.textContent = '❌ ' + err.message;
+    document.getElementById('passInput').value = '';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'লগইন করুন';
+  }
+}
+function logout() {
+  sessionStorage.removeItem('tashura_admin_pass');
+  location.reload();
+}
+function enterApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  loadBanners();
+}
+window.onload = () => {
+  if (sessionStorage.getItem('tashura_admin_pass')) enterApp();
+};
+
+// ============ টোস্ট ============
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ============ প্রিভিউ ============
+function updatePreview() {
+  const url = document.getElementById('fImage').value.trim();
+  const box = document.getElementById('previewBox');
+  const img = document.getElementById('previewImg');
+  if (!url) { box.style.display = 'none'; return; }
+  img.src = url;
+  box.style.display = 'block';
+}
+
+// ============ ফর্ম রিসেট ============
+let editingId = null;
+function resetForm() {
+  editingId = null;
+  document.getElementById('fImage').value = '';
+  document.getElementById('fLink').value = '';
+  document.getElementById('fActive').checked = true;
+  document.getElementById('previewBox').style.display = 'none';
+  document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus"></i> নতুন ব্যানার যোগ করুন';
+  document.getElementById('submitBtn').innerHTML = '<i class="fas fa-check"></i> ব্যানার সেভ করুন';
+  document.getElementById('cancelEditBtn').style.display = 'none';
+}
+
+// ============ সেভ (নতুন / এডিট) ============
+async function saveBanner() {
+  const image = document.getElementById('fImage').value.trim();
+  const link = document.getElementById('fLink').value.trim();
+  const active = document.getElementById('fActive').checked;
+  if (!image) { showToast('❌ ইমেজ URL দিন', 'error'); return; }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'সেভ হচ্ছে...';
+
+  try {
+    let res;
+    if (editingId) {
+      res = await fetch(`${WORKER_URL}/api/banners/${encodeURIComponent(editingId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': getPass() },
+        body: JSON.stringify({ image, link, active })
+      });
+    } else {
+      res = await fetch(`${WORKER_URL}/api/banners`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Password': getPass() },
+        body: JSON.stringify({ image, link, active })
+      });
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'অজানা সমস্যা');
+
+    showToast(editingId ? '✅ ব্যানার আপডেট হয়েছে' : '✅ ব্যানার যোগ হয়েছে', 'success');
+    resetForm();
+    allBanners = data.banners;
+    renderList();
+  } catch (err) {
+    showToast('❌ ' + err.message, 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-check"></i> ব্যানার সেভ করুন';
+  }
+}
+
+// ============ লিস্ট লোড ============
+let allBanners = [];
+async function loadBanners() {
+  const box = document.getElementById('blist');
+  box.innerHTML = '<div class="loading">লোড হচ্ছে...</div>';
+  try {
+    const res = await fetch(`${WORKER_URL}/api/banners`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'লোড ব্যর্থ হয়েছে');
+    allBanners = data.banners;
+    renderList();
+  } catch (err) {
+    box.innerHTML = `<div class="empty">❌ লোড করা যায়নি: ${err.message}</div>`;
+  }
+}
+function renderList() {
+  const box = document.getElementById('blist');
+  const sorted = [...allBanners].sort((a, b) => (a.order || 0) - (b.order || 0));
+  document.getElementById('countBadge').textContent = `(${sorted.length}টি)`;
+  if (!sorted.length) { box.innerHTML = '<div class="empty">কোনো ব্যানার নেই</div>'; return; }
+
+  box.innerHTML = sorted.map((b, i) => `
+    <div class="bitem ${b.active ? '' : 'inactive'}">
+      <img src="${b.image}" onerror="this.style.opacity=.2">
+      <div class="binfo">
+        <div class="border-no">সিরিয়াল: ${i + 1} ${b.active ? '' : '&nbsp;•&nbsp;নিষ্ক্রিয়'}</div>
+        <div class="blink">লিংক: ${b.link || '—'}</div>
+      </div>
+      <div class="bactions">
+        <div class="row">
+          <button class="btn-up" ${i === 0 ? 'disabled' : ''} onclick="moveBanner('${escAttr(b.id)}',-1)"><i class="fas fa-arrow-up"></i></button>
+          <button class="btn-down" ${i === sorted.length - 1 ? 'disabled' : ''} onclick="moveBanner('${escAttr(b.id)}',1)"><i class="fas fa-arrow-down"></i></button>
+        </div>
+        <div class="row">
+          <button class="btn-toggle ${b.active ? '' : 'off'}" onclick="toggleActive('${escAttr(b.id)}', ${!b.active})"><i class="fas fa-power-off"></i></button>
+          <button class="btn-edit" onclick="editBanner('${escAttr(b.id)}')"><i class="fas fa-pen"></i></button>
+          <button class="btn-del" onclick="deleteBanner('${escAttr(b.id)}')"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+function escAttr(s) { return String(s).replace(/'/g, "\\'"); }
+
+// ============ রিঅর্ডার (উপরে/নিচে) ============
+async function moveBanner(id, dir) {
+  const sorted = [...allBanners].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const idx = sorted.findIndex(b => b.id === id);
+  const swapIdx = idx + dir;
+  if (swapIdx < 0 || swapIdx >= sorted.length) return;
+
+  [sorted[idx].order, sorted[swapIdx].order] = [sorted[swapIdx].order, sorted[idx].order];
+  // সিরিয়াল নম্বর ১,২,৩... করে পুনরায় বসানো
+  sorted.sort((a, b) => (a.order || 0) - (b.order || 0)).forEach((b, i) => b.order = i + 1);
+
+  try {
+    const res = await fetch(`${WORKER_URL}/api/banners/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Password': getPass() },
+      body: JSON.stringify({ banners: sorted })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'রিঅর্ডার ব্যর্থ');
+    allBanners = data.banners;
+    renderList();
+  } catch (err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+
+// ============ Active/Inactive টগল ============
+async function toggleActive(id, newVal) {
+  try {
+    const res = await fetch(`${WORKER_URL}/api/banners/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Password': getPass() },
+      body: JSON.stringify({ active: newVal })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'আপডেট ব্যর্থ');
+    allBanners = data.banners;
+    renderList();
+    showToast(newVal ? '✅ সক্রিয় করা হয়েছে' : '✅ নিষ্ক্রিয় করা হয়েছে', 'success');
+  } catch (err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+
+// ============ এডিট ============
+function editBanner(id) {
+  const b = allBanners.find(x => x.id === id);
+  if (!b) return;
+  editingId = id;
+  document.getElementById('fImage').value = b.image || '';
+  document.getElementById('fLink').value = b.link || '';
+  document.getElementById('fActive').checked = !!b.active;
+  updatePreview();
+  document.getElementById('formTitle').innerHTML = '<i class="fas fa-pen"></i> ব্যানার এডিট করুন';
+  document.getElementById('submitBtn').innerHTML = '<i class="fas fa-check"></i> আপডেট সেভ করুন';
+  document.getElementById('cancelEditBtn').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============ ডিলিট ============
+async function deleteBanner(id) {
+  if (!confirm('আপনি কি এই ব্যানারটি ডিলিট করতে চান?')) return;
+  try {
+    const res = await fetch(`${WORKER_URL}/api/banners/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { 'X-Admin-Password': getPass() }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'ডিলিট ব্যর্থ');
+    showToast('🗑️ ব্যানার ডিলিট হয়েছে', 'success');
+    allBanners = data.banners;
+    renderList();
+  } catch (err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+</script>
+</body>
+</html>
