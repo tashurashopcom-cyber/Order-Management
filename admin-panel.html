@@ -515,8 +515,14 @@ function placeholder(el, label) {
 async function refreshStats() {
   try {
     const res = await fetch(`${WORKER_URL}/api/products`);
-    const data = await res.json();
-    if (!res.ok) throw new Error();
+    const text = await res.text();
+    if (!res.ok) {
+      let msg = text || res.statusText || 'API error';
+      try { const j = JSON.parse(text); msg = j.error || JSON.stringify(j); } catch (e) {}
+      showToast('API error: ' + msg, 'error');
+      throw new Error(msg);
+    }
+    const data = text ? JSON.parse(text) : {};
     const products = data.products || [];
     document.getElementById('statProducts').textContent = products.length;
     document.getElementById('statStock').textContent = products.reduce((s, p) => s + (parseInt(p.stock) || 0), 0);
@@ -524,6 +530,7 @@ async function refreshStats() {
     document.getElementById('statCategories').textContent = new Set(products.map(p => p.category).filter(Boolean)).size;
   } catch (err) {
     ['statProducts','statStock','statOutOfStock','statCategories'].forEach(id => document.getElementById(id).textContent = '-');
+    console.error('refreshStats error:', err);
   }
 }
 
